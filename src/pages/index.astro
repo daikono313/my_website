@@ -1,0 +1,139 @@
+---
+import "../styles/global.css";
+import { profile, skills, career, featuredRepos } from "../data/profile";
+import { getRepos, getActivity, getContributions } from "../lib/github";
+
+const user = profile.githubUser;
+const [allRepos, activity, contributions] = await Promise.all([
+  getRepos(user),
+  getActivity(user),
+  getContributions(user),
+]);
+
+const featured = featuredRepos
+  .map((n) => allRepos.find((r) => r.name === n))
+  .filter((r) => r !== undefined);
+const repos = [
+  ...featured,
+  ...allRepos.filter((r) => !featuredRepos.includes(r.name) && r.name !== "my_website"),
+].slice(0, 6);
+
+const fmt = (iso: string) =>
+  new Date(iso).toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" });
+const builtAt = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{profile.name} — {profile.title}</title>
+    <meta name="description" content={profile.summary} />
+    <meta property="og:title" content={`${profile.name} — ${profile.title}`} />
+    <meta property="og:description" content={profile.summary} />
+  </head>
+  <body>
+    <div class="container">
+      <header class="hero">
+        <div class="prompt"><b>~</b> $ whoami</div>
+        <h1>
+          {profile.name}
+          {profile.nameJa && <span class="name-ja">{profile.nameJa}</span>}
+        </h1>
+        <div class="title">{profile.title} · {profile.location}</div>
+        <p class="summary">{profile.summary}</p>
+        <nav class="links">
+          {profile.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label}</a>)}
+        </nav>
+      </header>
+
+      <section id="skills">
+        <h2>Skills</h2>
+        <div class="skills">
+          {skills.map((s) => (
+            <div>
+              <h3>{s.category}</h3>
+              <ul class="tags">{s.items.map((i) => <li>{i}</li>)}</ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="career">
+        <h2>Career</h2>
+        <ol class="timeline">
+          {career.map((c) => (
+            <li>
+              <div class="period">{c.period}</div>
+              <div>
+                <h3>{c.company}</h3>
+                <div class="role">{c.role}</div>
+                <p>{c.description}</p>
+                {c.tags && <ul class="tags">{c.tags.map((t) => <li>{t}</li>)}</ul>}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section id="projects">
+        <h2>Projects</h2>
+        {repos.length > 0 ? (
+          <div class="repos">
+            {repos.map((r) => (
+              <a class="repo" href={r.url} target="_blank" rel="noopener">
+                <span class="name">{r.name}</span>
+                <span class="desc">{r.description ?? "—"}</span>
+                <span class="meta">
+                  {r.language && <span>{r.language}</span>}
+                  <span>★ {r.stars}</span>
+                  <span>{fmt(r.updatedAt)}</span>
+                </span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p class="empty">公開リポジトリを取得できませんでした。</p>
+        )}
+      </section>
+
+      <section id="activity">
+        <h2>GitHub Activity</h2>
+        {contributions && (
+          <>
+            <div class="cal-total">{contributions.total} contributions in the last year</div>
+            <div class="calendar-wrap">
+              <div class="calendar" role="img" aria-label={`過去1年で ${contributions.total} contributions`}>
+                {contributions.weeks.flatMap((w) =>
+                  w.map((d) => <span data-l={d.level} title={`${d.date}: ${d.count}`} />),
+                )}
+              </div>
+            </div>
+          </>
+        )}
+        {activity.length > 0 ? (
+          <ul class="activity">
+            {activity.map((a) => (
+              <li>
+                <time datetime={a.createdAt}>{fmt(a.createdAt)}</time>
+                <div>
+                  <a href={a.url} target="_blank" rel="noopener">{a.summary}</a>
+                  <div class="repo-name">{a.repo}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="empty">最近の公開アクティビティはありません。</p>
+        )}
+      </section>
+
+      <footer>
+        <div>© {new Date().getFullYear()} {profile.name}</div>
+        <div>last build: {builtAt} JST · <a href={`https://github.com/${user}/my_website`}>source</a></div>
+      </footer>
+    </div>
+  </body>
+</html>
