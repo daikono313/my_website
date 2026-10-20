@@ -24,7 +24,7 @@ const beacon = /^[0-9a-f]{32}$/.test(analyticsToken ?? "") ? JSON.stringify({ to
     <meta name="description" content={description} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    {beacon && <script is:inline defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={beacon}></script>}
+    {beacon && <script is:inline type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={beacon}></script>}
   </head>
   <body>
     <div class="container">
