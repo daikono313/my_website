@@ -38,5 +38,11 @@ const beacon = /^[0-9a-f]{32}$/.test(analyticsToken ?? "") ? JSON.stringify({ to
         <div><a href="/contact/">contact</a> · <a href={`https://github.com/${profile.githubUser}/my_website`}>source</a></div>
       </footer>
     </div>
+    {beacon && (
+      <script>
+        // ページ表示の記録（/api/pv → Workers Analytics Engine）。Web Analytics と同じく本番だけ
+        import "../client/pv";
+      </script>
+    )}
   </body>
 </html>

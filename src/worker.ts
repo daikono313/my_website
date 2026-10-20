@@ -1,4 +1,5 @@
 // Worker のエントリポイント。静的ファイルは assets がそのまま返し、/api/* だけがここに来る（wrangler.jsonc の run_worker_first）
+// /api/pv: ページ表示の記録（src/client/pv.ts が送る）。Workers Analytics Engine に1件書き、SQL API で分析する（docs/analytics.md）
 // /api/contact: 問い合わせフォーム（概要・メールアドレス・内容）を受け付け、Turnstile で検証してから Google Apps Script に転送する（Apps Script が Gmail で自分宛てに送る）
 
 interface Env {
@@ -6,6 +7,7 @@ interface Env {
   TURNSTILE_SECRET_KEY?: string; // Cloudflare Turnstile のシークレットキー
   CONTACT_GAS_URL?: string; // Apps Script ウェブアプリの URL（https://script.google.com/macros/s/.../exec）
   CONTACT_GAS_SECRET?: string; // Apps Script と共有する合言葉
+  PV?: AnalyticsEngineDataset; // ページ表示の記録先（wrangler.jsonc の analytics_engine_datasets）
 }
 
 const LIMITS = { subject: 100, email: 254, message: 5000 };
@@ -35,6 +37,41 @@ const back = (req: Request, status: "sent" | string) => {
   return reply(null, 303, { Location: url.pathname + url.search });
 };
 
+// ---- /api/pv ----
+// 個人を特定できる値（IP・UA の全文・リファラーの URL 全体）は保存しない
+const PATH_RE = /^\/[A-Za-z0-9\-._~/%]{0,199}$/;
+
+const refHost = (ref: unknown, self: string) => {
+  try {
+    const host = new URL(String(ref)).hostname;
+    return host === self ? "" : host.slice(0, 100);
+  } catch {
+    return "";
+  }
+};
+
+const device = (ua: string) =>
+  /bot|crawl|spider|slurp|headless|preview/i.test(ua) ? "bot" : /Mobi|Android|iPhone|iPad/i.test(ua) ? "mobile" : "desktop";
+
+async function handlePageview(req: Request, env: Env): Promise<Response> {
+  if (req.method !== "POST") return reply("Method Not Allowed", 405, { Allow: "POST" });
+  const url = new URL(req.url);
+  if (req.headers.get("Origin") !== url.origin) return reply("Forbidden", 403);
+  if (Number(req.headers.get("Content-Length") ?? 0) > 1_000) return reply(null, 413);
+
+  const data = (await req.json().catch(() => null)) as { p?: unknown; r?: unknown } | null;
+  const path = String(data?.p ?? "");
+  if (!PATH_RE.test(path)) return reply(null, 400);
+
+  const country = String((req as { cf?: { country?: string } }).cf?.country ?? "").slice(0, 2);
+  env.PV?.writeDataPoint({
+    indexes: [path],
+    blobs: [path, refHost(data?.r, url.hostname), country, device(req.headers.get("User-Agent") ?? ""), url.hostname],
+  });
+  return reply(null, 204);
+}
+
+// ---- /api/contact ----
 async function verifyTurnstile(token: string, secret: string, ip: string | null): Promise<boolean> {
   const body = new FormData();
   body.append("secret", secret);
@@ -94,6 +131,7 @@ export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const { pathname } = new URL(req.url);
     if (pathname === "/api/contact") return handleContact(req, env);
+    if (pathname === "/api/pv") return handlePageview(req, env);
     if (pathname.startsWith("/api/")) return reply("Not Found", 404);
     return env.ASSETS.fetch(req);
   },

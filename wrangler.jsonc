@@ -12,6 +12,8 @@
   // Secrets（ダッシュボードで「シークレット」として設定）: TURNSTILE_SECRET_KEY / CONTACT_GAS_URL / CONTACT_GAS_SECRET
   // ※ ダッシュボードで「変数」（平文）として追加したものは、次の wrangler deploy で消える。必ずシークレットにする
   "observability": { "enabled": true },
+  // ページ表示の記録（/api/pv）。Workers Analytics Engine（無料: 1日10万件書き込み・1万回クエリ、保持3か月）
+  "analytics_engine_datasets": [{ "binding": "PV", "dataset": "my_website_pageviews" }],
   // PR ごとの Workers Preview（npx wrangler preview）。静的サイトなので Preview 専用の設定はなし
   "previews": {}
 }
