@@ -15,7 +15,7 @@
 
 Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信している。本番は https://de.daisuke-harato.workers.dev
 
-### ページ（上部のタブ: Home / Articles / Weekly / Search）
+### ページ（上部バー: 左にタブ Home / Articles / Weekly、右に常設の検索欄 → `/search/?q=`）
 | URL | ファイル | 内容 |
 |---|---|---|
 | `/` | `src/pages/index.astro` | Profile → Skills → Career → Projects → GitHub 統計 → Articles（最新3件）→ Weekly Tech Report（最新3件） |
