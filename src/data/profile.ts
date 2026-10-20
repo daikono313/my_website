@@ -10,9 +10,9 @@ export const profile = {
     "データ基盤の設計・構築・運用を専門とするエンジニア。最近は AI エージェントによるデータ基盤の自律構築・運用に取り組んでいます。", // TODO
   links: [
     { label: "GitHub", href: "https://github.com/daikono313" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/harato-daisuke-3543411a6/" },
     // { label: "X", href: "https://x.com/..." },
     // { label: "Zenn", href: "https://zenn.dev/..." },
-    // { label: "LinkedIn", href: "https://www.linkedin.com/in/..." },
   ],
 };
 
