@@ -15,14 +15,14 @@
 
 Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信している。本番は https://de.daisuke-harato.workers.dev
 
-### ページ（上部バー: 左にタブ Home / Articles / Weekly / Contact、右に常設の検索欄 → `/search/?q=`）
+### ページ（上部バー: 左にタブ Home / Articles / Weekly Tech Note / Contact、右に常設の検索欄 → `/search/?q=`）
 | URL | ファイル | 内容 |
 |---|---|---|
-| `/` | `src/pages/index.astro` | Profile → Skills → Projects → GitHub 統計 → Articles（最新3件）→ Weekly Tech Report（最新3件）→ Contact（フォームへのリンク） |
+| `/` | `src/pages/index.astro` | Profile（名前・紹介文・リンク）→ Skills → Projects → GitHub 統計 → Articles（最新3件）→ Weekly Tech Note（最新3件）→ Contact（フォームへのリンク） |
 | `/contact/` | `src/pages/contact/index.astro` + `src/client/contact.ts` | 問い合わせフォーム（概要・メールアドレス・内容。3つすべて入力するまで送信不可）。送信先のアドレスはサイトに一切出さない |
 | `/api/contact` | `src/worker.ts` | フォームの受付。Origin 確認 → 入力検証 → Turnstile 検証 → Google Apps Script に転送（Apps Script が Gmail で送る） |
 | `/articles/` `/articles/<slug>/` | `src/pages/articles/` | 手書きの技術記事の一覧と詳細 |
-| `/weekly/` `/weekly/<weekStart>/` | `src/pages/weekly/` | Weekly Tech Report の一覧と詳細（注目ポイント・前後の週へのリンク・AI 生成の注記） |
+| `/weekly/` `/weekly/<weekStart>/` | `src/pages/weekly/` | Weekly Tech Note の一覧と詳細（注目ポイント・前後の週へのリンク・AI 生成の注記） |
 | `/search/` | `src/pages/search.astro` + `src/client/search.ts` | キーワード・種類・タグによる検索。`?q=` `?kind=` `?tag=` で条件を共有できる |
 | `/search-index.json` | `src/pages/search-index.json.ts` | 検索インデックス（ビルド時に生成） |
 
@@ -30,7 +30,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 | 置き場所 | 内容 | 追加方法 |
 |---|---|---|
 | `src/content/articles/*.md` | 技術記事 | 手で書いて PR |
-| `src/content/weekly/<weekStart>.md` | Weekly Tech Report | 毎週月曜に GitHub Actions + Workers AI が自動生成して PR → 人が確認してマージ。手動で作り直すときは skill `weekly-tech-report` |
+| `src/content/weekly/<weekStart>.md` | Weekly Tech Note | 毎週月曜に GitHub Actions + Workers AI が自動生成して PR → 人が確認してマージ。手動で作り直すときは skill `weekly-tech-report` |
 | `src/content.config.ts` | 上記2つの frontmatter スキーマ | |
 | `src/data/profile.ts` | プロフィール・スキル・強調するリポジトリ | 手で編集 |
 | `src/lib/github.ts` | GitHub 統計（ビルド時に API から取得。公開リポジトリのみ） | |
@@ -41,7 +41,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 - `src/components/`: `SiteNav`（タブ）、`PageHeader`（見出し）、`PostCards`（トップのカード）、`PostList`（一覧）、`TagList`（タグ → タグ検索へのリンク）
 - `src/lib/posts.ts`: 記事とウィークリーを共通の `Post` 型で扱う（一覧・トップ・検索で共用）
 - `src/styles/global.css`: スタイルはこの1ファイル。色は `:root` の変数で、ダークモードに対応
-- `scripts/weekly/`: Weekly Tech Report の自動生成（`sources.mjs` 情報源 / `collect.mjs` 収集 / `generate.mjs` Workers AI で生成・描画 / `auto-review.sh` 自動診断レポート）。AI には項目 ID だけを返させ、リンクはスクリプトが収集した URL から差し込む
+- `scripts/weekly/`: Weekly Tech Note の自動生成（`sources.mjs` 情報源 / `collect.mjs` 収集 / `generate.mjs` Workers AI で生成・描画 / `auto-review.sh` 自動診断レポート）。AI には項目 ID だけを返させ、リンクはスクリプトが収集した URL から差し込む
 
 ### 守ること
 - **CSP**（`public/_headers`）: インラインのスクリプト・スタイルは使わない（`style="..."` も不可）。スクリプトは `src/client/` に置き、Astro に外部ファイルとして出力させる

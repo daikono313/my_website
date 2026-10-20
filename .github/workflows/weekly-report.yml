@@ -1,4 +1,4 @@
-name: Weekly Tech Report
+name: Weekly Tech Note
 
 on:
   schedule:
@@ -84,7 +84,7 @@ jobs:
           cov() { jq -r --arg st "$1" '[.coverage[] | select(.status == $st) | .source] | join("、") | if . == "" then "なし" else . end' items.json; }
           cat > pr-body.md <<MD
           ## 概要
-          $WEEK週の Weekly Tech Report（Cloudflare Workers AI による自動生成）。
+          $WEEK週の Weekly Tech Note（Cloudflare Workers AI による自動生成）。
 
           ## 変更種別
           - [x] feat（機能・コンテンツ追加）

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// collect.mjs の結果を Cloudflare Workers AI（無料枠）に渡し、Weekly Tech Report の Markdown を作る
+// collect.mjs の結果を Cloudflare Workers AI（無料枠）に渡し、Weekly Tech Note の Markdown を作る
 // 使い方: node scripts/weekly/generate.mjs items.json > src/content/weekly/<weekStart>.md
 //         node scripts/weekly/generate.mjs items.json --mock ai-output.json（AI を呼ばずに描画だけ確認する）
 // 必要な環境変数: CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_AI_TOKEN（Workers AI 権限のみのトークン）
@@ -122,7 +122,7 @@ const tags = [...new Set((Array.isArray(out.tags) ? out.tags : []).map(plainLine
 
 const md = [];
 md.push("---");
-md.push(`title: Weekly Tech Report ${weekStart}週`);
+md.push(`title: Weekly Tech Note ${weekStart}週`);
 md.push(`date: ${new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10)}`);
 md.push(`weekStart: ${weekStart}`);
 md.push(`weekEnd: ${weekEnd}`);

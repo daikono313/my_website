@@ -1,4 +1,4 @@
-// Weekly Tech Report の情報源（自動収集・Claude による手動作成の両方で使う唯一のリスト）
+// Weekly Tech Note の情報源（自動収集・Claude による手動作成の両方で使う唯一のリスト）
 // category: platform（製品リリースノート）/ oss / ai / blog
 
 export const SOURCES = [

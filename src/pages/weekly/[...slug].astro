@@ -20,7 +20,7 @@ const d = weekly.data;
 ---
 
 <Base title={`${d.title} — ${profile.name}`} description={d.description} nav="weekly">
-  <PageHeader prompt="~/weekly" command={`cat ${weekly.id}.md`} title={d.title}>
+  <PageHeader title={d.title}>
     <span>対象期間 {fmtPeriod(d.weekStart, d.weekEnd)}（生成 {fmtDate(d.date)}）</span>
     <TagList tags={d.tags} />
   </PageHeader>

@@ -1,9 +1,9 @@
 ---
 name: weekly-tech-report
-description: データ基盤・OSS・AI×データ・注目記事の Weekly Tech Report を Claude が手動で作成し、src/content/weekly/ に追加して PR を出す。通常は GitHub Actions + Cloudflare Workers AI が毎週自動生成するので、この skill は自動生成の質が足りないときの作り直しや、特定の週を丁寧に作るときに使う。
+description: データ基盤・OSS・AI×データ・注目記事の Weekly Tech Note を Claude が手動で作成し、src/content/weekly/ に追加して PR を出す。通常は GitHub Actions + Cloudflare Workers AI が毎週自動生成するので、この skill は自動生成の質が足りないときの作り直しや、特定の週を丁寧に作るときに使う。
 ---
 
-# Weekly Tech Report
+# Weekly Tech Note
 
 ## 作成方法は2つ
 | 方法 | いつ | 仕組み |
@@ -49,7 +49,7 @@ description: データ基盤・OSS・AI×データ・注目記事の Weekly Tech
 
 ```markdown
 ---
-title: Weekly Tech Report <weekStart>週
+title: Weekly Tech Note <weekStart>週
 date: <生成日 YYYY-MM-DD>
 weekStart: <YYYY-MM-DD>
 weekEnd: <YYYY-MM-DD>

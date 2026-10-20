@@ -9,7 +9,7 @@ const posts = await getPosts("articles");
 ---
 
 <Base title={`Articles — ${profile.name}`} nav="articles">
-  <PageHeader prompt="~/articles" command="ls -t" title="Articles" />
+  <PageHeader title="Articles" />
   <section>
     <PostList posts={posts} empty="まだ記事はありません。" />
   </section>

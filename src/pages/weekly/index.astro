@@ -8,8 +8,8 @@ import { getWeeklies, fmtPeriod } from "../../lib/posts";
 const weeklies = await getWeeklies();
 ---
 
-<Base title={`Weekly Tech Report — ${profile.name}`} description="データ基盤・OSS・AI×データの1週間の動きをまとめたレポート" nav="weekly">
-  <PageHeader prompt="~/weekly" command="ls -t" title="Weekly Tech Report">
+<Base title={`Weekly Tech Note — ${profile.name}`} description="データ基盤・OSS・AI×データの1週間の動きをまとめたレポート" nav="weekly">
+  <PageHeader title="Weekly Tech Note">
     <span>データ基盤製品・OSS・AI×データ・注目記事を毎週まとめています</span>
   </PageHeader>
   <section>

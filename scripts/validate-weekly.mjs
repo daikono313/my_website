@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Weekly Tech Report の機械チェック。--check-links でリンク先の到達性も確認する。
+// Weekly Tech Note の機械チェック。--check-links でリンク先の到達性も確認する。
 // 使い方: node scripts/validate-weekly.mjs src/content/weekly/2026-10-12.md [--check-links]
 import { readFileSync } from "node:fs";
 import { basename } from "node:path";
