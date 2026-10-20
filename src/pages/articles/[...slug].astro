@@ -1,0 +1,28 @@
+---
+import Base from "../../layouts/Base.astro";
+import { profile } from "../../data/profile";
+import { getArticles, fmtDate } from "../../lib/articles";
+import { render } from "astro:content";
+
+export async function getStaticPaths() {
+  const articles = await getArticles();
+  return articles.map((a) => ({ params: { slug: a.id }, props: { article: a } }));
+}
+
+const { article } = Astro.props;
+const { Content } = await render(article);
+---
+
+<Base title={`${article.data.title} — ${profile.name}`} description={article.data.description}>
+  <header class="hero compact">
+    <div class="prompt"><b>~/articles</b> $ cat {article.id}.md</div>
+    <h1>{article.data.title}</h1>
+    <div class="article-meta">
+      <time datetime={article.data.date.toISOString()}>{fmtDate(article.data.date)}</time>
+      {article.data.tags.length > 0 && <ul class="tags">{article.data.tags.map((t) => <li>{t}</li>)}</ul>}
+    </div>
+  </header>
+  <article class="prose">
+    <Content />
+  </article>
+</Base>

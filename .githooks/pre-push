@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# push 前に (1) 自動セキュリティ検査 (2) Claude skill "prepush-security-review" のレポート(PASS)を要求する
+set -uo pipefail
+root=$(git rev-parse --show-toplevel)
+zero=0000000000000000000000000000000000000000
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue   # ブランチ削除
+  report="$root/.security-review/$local_sha.md"
+  if [ ! -f "$report" ] || ! grep -q '^Verdict: PASS' "$report"; then
+    echo "🚫 push blocked: $local_ref ($local_sha) のセキュリティレビューが未実施または FAIL です。" >&2
+    echo "   Claude Code で /prepush-security-review を実行してください（出力: .security-review/$local_sha.md）。" >&2
+    exit 1
+  fi
+done
+
+bash "$root/scripts/security-scan.sh" >&2 || { echo "🚫 push blocked: scripts/security-scan.sh が失敗しました。" >&2; exit 1; }

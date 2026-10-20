@@ -1,0 +1,129 @@
+---
+import Base from "../layouts/Base.astro";
+import { profile, skills, career, featuredRepos } from "../data/profile";
+import { getRepos, getStats } from "../lib/github";
+import { getArticles, fmtDate } from "../lib/articles";
+
+const user = profile.githubUser;
+const [allRepos, stats, articles] = await Promise.all([getRepos(user), getStats(user), getArticles()]);
+
+const featured = featuredRepos
+  .map((n) => allRepos.find((r) => r.name === n))
+  .filter((r) => r !== undefined);
+const repos = [
+  ...featured,
+  ...allRepos.filter((r) => !featuredRepos.includes(r.name) && r.name !== "my_website"),
+].slice(0, 6);
+
+const latest = articles.slice(0, 3);
+const fmt = (iso: string) => fmtDate(new Date(iso));
+const avg = (n: number) => n.toFixed(1);
+---
+
+<Base title={`${profile.name} — ${profile.title}`}>
+  <header class="hero">
+    <div class="prompt"><b>~</b> $ whoami</div>
+    <h1>
+      {profile.name}
+      {profile.nameJa && <span class="name-ja">{profile.nameJa}</span>}
+    </h1>
+    <div class="title">{profile.title} · {profile.location}</div>
+    <p class="summary">{profile.summary}</p>
+    <nav class="links">
+      {profile.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label}</a>)}
+    </nav>
+  </header>
+
+  <section id="skills">
+    <h2>Skills</h2>
+    <div class="skills">
+      {skills.map((s) => (
+        <div>
+          <h3>{s.category}</h3>
+          <ul class="tags">{s.items.map((i) => <li>{i}</li>)}</ul>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section id="career">
+    <h2>Career</h2>
+    <ol class="timeline">
+      {career.map((c) => (
+        <li>
+          <div class="period">{c.period}</div>
+          <div>
+            <h3>{c.company}</h3>
+            <div class="role">{c.role}</div>
+            <p>{c.description}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section id="projects">
+    <h2>Projects</h2>
+    {repos.length > 0 ? (
+      <div class="cards">
+        {repos.map((r) => (
+          <a class="card" href={r.url} target="_blank" rel="noopener">
+            <span class="card-title mono">{r.name}</span>
+            <span class="desc">{r.description ?? "—"}</span>
+            <span class="meta">
+              {r.language && <span>{r.language}</span>}
+              <span>★ {r.stars}</span>
+              <span>{fmt(r.updatedAt)}</span>
+            </span>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <p class="empty">公開リポジトリを取得できませんでした。</p>
+    )}
+  </section>
+
+  {stats && (
+    <section id="github">
+      <h2>GitHub</h2>
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-label">Commits / month</span>
+          <span class="stat-value">{avg(stats.commitsPerMonth)}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Merged PRs / month</span>
+          <span class="stat-value">{avg(stats.mergedPrsPerMonth)}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Contributions / year</span>
+          <span class="stat-value">{stats.total}</span>
+        </div>
+      </div>
+      <p class="stat-note">直近 {avg(stats.months)} か月の平均（公開リポジトリ）</p>
+      <div class="calendar-wrap">
+        <div class="calendar" role="img" aria-label={`過去1年で ${stats.total} contributions`}>
+          {stats.weeks.flatMap((w) => w.map((d) => <span data-l={d.level} title={`${d.date}: ${d.count}`} />))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section id="articles">
+    <h2>Articles</h2>
+    {latest.length > 0 ? (
+      <div class="cards">
+        {latest.map((a) => (
+          <a class="card" href={`/articles/${a.id}/`}>
+            <span class="card-title">{a.data.title}</span>
+            <span class="desc">{a.data.description}</span>
+            <span class="meta">{fmtDate(a.data.date)}</span>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <p class="empty">まだ記事はありません。</p>
+    )}
+    {articles.length > latest.length && <p class="more"><a href="/articles/">すべての記事 →</a></p>}
+  </section>
+</Base>

@@ -1,0 +1,19 @@
+{
+  "name": "my-website",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro build && wrangler dev",
+    "deploy": "astro build && wrangler deploy",
+    "prepare": "git config core.hooksPath .githooks || true",
+    "security:scan": "bash scripts/security-scan.sh"
+  },
+  "dependencies": {
+    "astro": "7.4.1"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.2"
+  }
+}
