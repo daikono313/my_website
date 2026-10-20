@@ -19,7 +19,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 | URL | ファイル | 内容 |
 |---|---|---|
 | `/` | `src/pages/index.astro` | Profile → Skills → Projects → GitHub 統計 → Articles（最新3件）→ Weekly Tech Report（最新3件）→ Contact（フォームへのリンク） |
-| `/contact/` | `src/pages/contact/index.astro` + `src/client/contact.ts` | 問い合わせフォーム（概要・内容）。送信先のアドレスはサイトに一切出さない |
+| `/contact/` | `src/pages/contact/index.astro` + `src/client/contact.ts` | 問い合わせフォーム（概要・メールアドレス・内容。3つすべて入力するまで送信不可）。送信先のアドレスはサイトに一切出さない |
 | `/api/contact` | `src/worker.ts` | フォームの受付。Origin 確認 → 入力検証 → Turnstile 検証 → Google Apps Script に転送（Apps Script が Gmail で送る） |
 | `/articles/` `/articles/<slug>/` | `src/pages/articles/` | 手書きの技術記事の一覧と詳細 |
 | `/weekly/` `/weekly/<weekStart>/` | `src/pages/weekly/` | Weekly Tech Report の一覧と詳細（注目ポイント・前後の週へのリンク・AI 生成の注記） |

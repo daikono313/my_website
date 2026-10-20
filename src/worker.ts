@@ -1,5 +1,5 @@
 // Worker のエントリポイント。静的ファイルは assets がそのまま返し、/api/* だけがここに来る（wrangler.jsonc の run_worker_first）
-// /api/contact: 問い合わせフォームを受け付け、Turnstile で検証してから Google Apps Script に転送する（Apps Script が Gmail で自分宛てに送る）
+// /api/contact: 問い合わせフォーム（概要・メールアドレス・内容）を受け付け、Turnstile で検証してから Google Apps Script に転送する（Apps Script が Gmail で自分宛てに送る）
 
 interface Env {
   ASSETS: Fetcher;
@@ -8,7 +8,9 @@ interface Env {
   CONTACT_GAS_SECRET?: string; // Apps Script と共有する合言葉
 }
 
-const LIMITS = { subject: 100, message: 5000 };
+const LIMITS = { subject: 100, email: 254, message: 5000 };
+// 返信先として使えるかの最低限の形式チェック（空白・改行・山括弧を含まない、@ とドットがある）
+const EMAIL_RE = /^[^\s@<>()",;:]+@[^\s@<>()",;:]+\.[^\s@<>()",;:]+$/;
 
 // 制御文字を除き、前後の空白を落とす（件名は改行も除く）
 const clean = (v: FormDataEntryValue | null, singleLine: boolean) =>
@@ -52,8 +54,13 @@ async function handleContact(req: Request, env: Env): Promise<Response> {
   if (clean(form.get("website"), true)) return back(req, "sent");
 
   const subject = clean(form.get("subject"), true);
+  const email = clean(form.get("email"), true);
   const message = clean(form.get("message"), false);
-  if (!subject || !message || subject.length > LIMITS.subject || message.length > LIMITS.message) return back(req, "invalid");
+  if (
+    !subject || !email || !message ||
+    subject.length > LIMITS.subject || email.length > LIMITS.email || message.length > LIMITS.message ||
+    !EMAIL_RE.test(email)
+  ) return back(req, "invalid");
 
   const ok = await verifyTurnstile(clean(form.get("cf-turnstile-response"), true), env.TURNSTILE_SECRET_KEY, req.headers.get("CF-Connecting-IP"));
   if (!ok) return back(req, "captcha");
@@ -61,7 +68,7 @@ async function handleContact(req: Request, env: Env): Promise<Response> {
   const res = await fetch(env.CONTACT_GAS_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ secret: env.CONTACT_GAS_SECRET, subject, message, receivedAt: new Date().toISOString() }),
+    body: JSON.stringify({ secret: env.CONTACT_GAS_SECRET, subject, email, message, receivedAt: new Date().toISOString() }),
     redirect: "follow",
   });
   const result = res.ok ? ((await res.json().catch(() => ({}))) as { ok?: boolean }) : {};
