@@ -26,11 +26,16 @@ tags: [Astro, Cloudflare, Security, GitHub Actions]
 const json = await gql(
   `query($login: String!, $from: DateTime!, $to: DateTime!, $q: String!) {
     user(login: $login) {
-      contributionsCollection(from: $from, to: $to) { totalCommitContributions }
+      contributionsCollection(from: $from, to: $to) {
+      commitContributionsByRepository(maxRepositories: 100) {
+        repository { isPrivate }
+        contributions { totalCount }
+      }
+    }
     }
     merged: search(query: $q, type: ISSUE, first: 1) { issueCount }
   }`,
-  { login, from, to, q: `author:${login} is:pr is:merged merged:>=${since}` },
+  { login, from, to, q: `author:${login} is:pr is:merged is:public merged:>=${since}` },
 );
 ```
 

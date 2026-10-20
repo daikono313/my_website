@@ -90,7 +90,10 @@ export async function getStats(user: string): Promise<Stats | null> {
       `query($login: String!, $from: DateTime!, $to: DateTime!, $q: String!) {
         user(login: $login) {
           contributionsCollection(from: $from, to: $to) {
-            totalCommitContributions
+            commitContributionsByRepository(maxRepositories: 100) {
+              repository { isPrivate }
+              contributions { totalCount }
+            }
             contributionCalendar {
               totalContributions
               weeks { contributionDays { date contributionCount contributionLevel } }
@@ -103,11 +106,15 @@ export async function getStats(user: string): Promise<Stats | null> {
         login: user,
         from: new Date(now.getTime() - 365 * DAY).toISOString(),
         to: now.toISOString(),
-        q: `author:${user} is:pr is:merged merged:>=${since}`,
+        q: `author:${user} is:pr is:merged is:public merged:>=${since}`,
       },
     );
     const cc = json?.data?.user?.contributionsCollection;
     if (!cc) return null;
+    // ローカルで個人トークンを使うと非公開リポジトリも含まれるため、公開分だけ数える
+    const publicCommits = cc.commitContributionsByRepository
+      .filter((r: any) => !r.repository.isPrivate)
+      .reduce((n: number, r: any) => n + r.contributions.totalCount, 0);
     const levels: Record<string, number> = {
       NONE: 0,
       FIRST_QUARTILE: 1,
@@ -125,7 +132,7 @@ export async function getStats(user: string): Promise<Stats | null> {
         })),
       ),
       months,
-      commitsPerMonth: cc.totalCommitContributions / months,
+      commitsPerMonth: publicCommits / months,
       mergedPrsPerMonth: (json?.data?.merged?.issueCount ?? 0) / months,
     };
   } catch (e) {
