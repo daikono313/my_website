@@ -68,8 +68,6 @@ a:hover { text-decoration: underline; }
 header.hero { padding: 56px 0 48px; }
 header.hero.compact { padding: 40px 0 24px; }
 header.hero.compact h1 { font-size: clamp(1.5rem, 4vw, 2.1rem); line-height: 1.35; }
-.prompt { font-family: var(--mono); color: var(--muted); font-size: 0.9rem; }
-.prompt b { color: var(--accent); font-weight: 500; }
 h1 { font-size: clamp(2rem, 6vw, 3rem); margin: 8px 0 0; letter-spacing: -0.02em; line-height: 1.2; }
 .name-ja { color: var(--muted); font-size: 1rem; margin-left: 8px; font-weight: 400; }
 .summary { max-width: 640px; color: var(--text); }

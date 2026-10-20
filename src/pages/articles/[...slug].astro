@@ -16,7 +16,7 @@ const { Content } = await render(article);
 ---
 
 <Base title={`${article.data.title} — ${profile.name}`} description={article.data.description} nav="articles">
-  <PageHeader prompt="~/articles" command={`cat ${article.id}.md`} title={article.data.title}>
+  <PageHeader title={article.data.title}>
     <time datetime={article.data.date.toISOString()}>{fmtDate(article.data.date)}</time>
     <TagList tags={article.data.tags} />
   </PageHeader>
