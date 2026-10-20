@@ -52,7 +52,8 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           npx wrangler preview --name "pr-$PR_NUMBER" --message "PR #$PR_NUMBER $HEAD_SHA" --json > preview.json || { cat preview.json; exit 1; }
-          url=$(jq -er '.preview.urls[0]' preview.json) || { cat preview.json; exit 1; }
+          # wrangler は JSON の前にアセットのアップロード状況を出力するため、先頭の "{" 以降だけを読む
+          url=$(sed -n '/^{/,$p' preview.json | jq -er '.preview.urls[0]') || { cat preview.json; exit 1; }
           echo "preview_url=$url" >> "$GITHUB_OUTPUT"
       - name: Comment preview URL
         env:
