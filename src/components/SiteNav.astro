@@ -6,17 +6,22 @@ interface Props {
   current?: NavKey;
 }
 const { current } = Astro.props;
-const tabs: { key: NavKey; label: string; href: string }[] = [
+// long があるタブは、狭い画面（400px 以下）で long の部分を隠す（例: Weekly Tech Note → Weekly）
+const tabs: { key: NavKey; label: string; long?: string; href: string }[] = [
   { key: "home", label: "Home", href: "/" },
   { key: "articles", label: "Articles", href: "/articles/" },
-  { key: "weekly", label: "Weekly Tech Note", href: "/weekly/" },
+  { key: "weekly", label: "Weekly", long: " Tech Note", href: "/weekly/" },
   { key: "contact", label: "Contact", href: "/contact/" },
 ];
 ---
 
 <nav class="site-nav" aria-label="サイト内">
   <div class="site-tabs">
-    {tabs.map((t) => <a href={t.href} aria-current={t.key === current ? "page" : undefined}>{t.label}</a>)}
+    {tabs.map((t) => (
+      <a href={t.href} aria-current={t.key === current ? "page" : undefined}>
+        {t.label}{t.long && <span class="tab-long">{t.long}</span>}
+      </a>
+    ))}
   </div>
   <form class="nav-search" action="/search/" method="get" role="search">
     <input name="q" type="search" placeholder="Search…" aria-label="サイト内を検索" autocomplete="off" />
