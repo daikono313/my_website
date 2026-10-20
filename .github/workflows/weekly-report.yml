@@ -81,6 +81,7 @@ jobs:
           git commit -m "weekly: $WEEK週のテックレポート（Workers AI 自動生成）"
           report=$(bash scripts/weekly/auto-review.sh "$file" "$ITEMS")
           git push -u origin "weekly/$WEEK" # pre-push hook がレポートと自動検査を確認する
+          cov() { jq -r --arg st "$1" '[.coverage[] | select(.status == $st) | .source] | join("、") | if . == "" then "なし" else . end' items.json; }
           cat > pr-body.md <<MD
           ## 概要
           $WEEK週の Weekly Tech Report（Cloudflare Workers AI による自動生成）。
@@ -99,6 +100,11 @@ jobs:
 
           ## リリース影響
           - [x] なし
+
+          ## 調査範囲（レポートには載せない）
+          - 更新あり: $(cov updated)
+          - 更新なし: $(cov no-updates)
+          - 取得できなかった: $(cov failed)
           MD
           url=$(gh pr create --base main --head "weekly/$WEEK" --title "weekly: $WEEK週のテックレポート" --body-file pr-body.md)
           gh pr comment "$url" --body-file "$report"

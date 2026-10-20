@@ -41,7 +41,7 @@ const SCHEMA = `{
   "description": "今週を1〜2文で要約（120字以内）",
   "highlights": ["今週の注目ポイント。何が起きたか — なぜ重要か（各80字以内）。ちょうど3件"],
   "actions": [{ "impact": "red|yellow", "text": "読者がやるべきこと（40字以内）", "reason": "理由・期限（60字以内）", "ids": ["根拠の項目id"] }],
-  "trends": ["複数ベンダー・OSS の動きを結び付けた考察の段落（各200字以内）。2〜3段落。個々のリリースの言い換えにしない"],
+  "trends": [{ "label": "トレンドの見出し（15字以内）", "text": "複数ベンダー・OSS の動きを結び付けた要点と、読者への示唆（100字以内）" }],
   "platform": [{ "id": "項目id", "impact": "red|yellow|green", "status": "GA|Preview|Beta|Deprecated|変更|その他", "summary": "何が変わるか → 誰にどう効くか（80字以内）" }],
   "oss": [{ "id": "項目id", "impact": "red|yellow|green", "summary": "主な変更と注意点（80字以内）" }],
   "ai": [{ "id": "項目id", "summary": "AI×データ基盤の観点での意味（80字以内）" }],
@@ -54,7 +54,8 @@ const SCHEMA = `{
 - oss: category=oss の項目すべて（pre-release はその旨を summary に書く）。
 - ai: AI エージェント・LLM・MCP・セマンティックレイヤーなど AI×データの項目を最大6件（platform と重複させない）。
 - reading: category=blog から、実務上の学びがある記事（設計判断・運用知見・移行事例・性能/コスト検証）を3〜5件。宣伝・入門の焼き直しは除外。
-- actions: red を優先して最大5件。該当がなければ空配列。`;
+- actions: red を優先して最大5件。該当がなければ空配列。
+- trends: 2〜3件。個々のリリースの言い換えにせず、複数の動きをまとめた流れを書く。`;
 
 function buildInput() {
   let used = 0;
@@ -138,8 +139,13 @@ for (const a of actions) {
 }
 md.push("");
 
-md.push("## 横断トレンド");
-for (const p of list(out.trends).slice(0, 3)) md.push(p, "");
+md.push("## トレンド");
+for (const t of (Array.isArray(out.trends) ? out.trends : []).slice(0, 3)) {
+  const label = safeText(typeof t === "string" ? "" : t?.label);
+  const text = safeText(typeof t === "string" ? t : t?.text);
+  if (text) md.push(label ? `- **${label}**: ${text}` : `- ${text}`);
+}
+md.push("");
 
 md.push("## リリースノート（製品別）");
 const platform = pick(out.platform, ["platform"]);
@@ -174,21 +180,13 @@ for (const x of ai) {
 }
 md.push("");
 
-md.push("## 読むべき記事");
+md.push("## Pickup 記事");
 const reading = pick(out.reading, ["blog"]).slice(0, 5);
 if (reading.length === 0) md.push("今週は該当なし");
 reading.forEach((x, i) => {
   const it = byId.get(x.id);
   md.push(`${i + 1}. **${link(it)}**（${safeText(it.source)}）— ${safeText(x.why)}`);
 });
-md.push("");
-
-md.push("## 調査範囲");
-const names = (st) => coverage.filter((c) => c.status === st).map((c) => safeText(c.source)).join("、") || "なし";
-md.push(`- 更新あり: ${names("updated")}`);
-md.push(`- 更新なし: ${names("no-updates")}`);
-md.push(`- 取得できなかった: ${names("failed")}`);
-md.push(`- 生成: Cloudflare Workers AI（${MODEL}）。収集 ${items.length} 件から選定`);
 md.push("");
 
 process.stdout.write(md.join("\n"));
