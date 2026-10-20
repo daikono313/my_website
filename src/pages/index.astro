@@ -1,14 +1,11 @@
 ---
-import "../styles/global.css";
+import Base from "../layouts/Base.astro";
 import { profile, skills, career, featuredRepos } from "../data/profile";
-import { getRepos, getActivity, getContributions } from "../lib/github";
+import { getRepos, getStats } from "../lib/github";
+import { getArticles, fmtDate } from "../lib/articles";
 
 const user = profile.githubUser;
-const [allRepos, activity, contributions] = await Promise.all([
-  getRepos(user),
-  getActivity(user),
-  getContributions(user),
-]);
+const [allRepos, stats, articles] = await Promise.all([getRepos(user), getStats(user), getArticles()]);
 
 const featured = featuredRepos
   .map((n) => allRepos.find((r) => r.name === n))
@@ -18,122 +15,115 @@ const repos = [
   ...allRepos.filter((r) => !featuredRepos.includes(r.name) && r.name !== "my_website"),
 ].slice(0, 6);
 
-const fmt = (iso: string) =>
-  new Date(iso).toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" });
-const builtAt = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+const latest = articles.slice(0, 3);
+const fmt = (iso: string) => fmtDate(new Date(iso));
+const avg = (n: number) => n.toFixed(1);
 ---
 
-<!doctype html>
-<html lang="ja">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>{profile.name} — {profile.title}</title>
-    <meta name="description" content={profile.summary} />
-    <meta property="og:title" content={`${profile.name} — ${profile.title}`} />
-    <meta property="og:description" content={profile.summary} />
-  </head>
-  <body>
-    <div class="container">
-      <header class="hero">
-        <div class="prompt"><b>~</b> $ whoami</div>
-        <h1>
-          {profile.name}
-          {profile.nameJa && <span class="name-ja">{profile.nameJa}</span>}
-        </h1>
-        <div class="title">{profile.title} · {profile.location}</div>
-        <p class="summary">{profile.summary}</p>
-        <nav class="links">
-          {profile.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label}</a>)}
-        </nav>
-      </header>
+<Base title={`${profile.name} — ${profile.title}`}>
+  <header class="hero">
+    <div class="prompt"><b>~</b> $ whoami</div>
+    <h1>
+      {profile.name}
+      {profile.nameJa && <span class="name-ja">{profile.nameJa}</span>}
+    </h1>
+    <div class="title">{profile.title} · {profile.location}</div>
+    <p class="summary">{profile.summary}</p>
+    <nav class="links">
+      {profile.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label}</a>)}
+    </nav>
+  </header>
 
-      <section id="skills">
-        <h2>Skills</h2>
-        <div class="skills">
-          {skills.map((s) => (
-            <div>
-              <h3>{s.category}</h3>
-              <ul class="tags">{s.items.map((i) => <li>{i}</li>)}</ul>
-            </div>
-          ))}
+  <section id="skills">
+    <h2>Skills</h2>
+    <div class="skills">
+      {skills.map((s) => (
+        <div>
+          <h3>{s.category}</h3>
+          <ul class="tags">{s.items.map((i) => <li>{i}</li>)}</ul>
         </div>
-      </section>
-
-      <section id="career">
-        <h2>Career</h2>
-        <ol class="timeline">
-          {career.map((c) => (
-            <li>
-              <div class="period">{c.period}</div>
-              <div>
-                <h3>{c.company}</h3>
-                <div class="role">{c.role}</div>
-                <p>{c.description}</p>
-                {c.tags && <ul class="tags">{c.tags.map((t) => <li>{t}</li>)}</ul>}
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section id="projects">
-        <h2>Projects</h2>
-        {repos.length > 0 ? (
-          <div class="repos">
-            {repos.map((r) => (
-              <a class="repo" href={r.url} target="_blank" rel="noopener">
-                <span class="name">{r.name}</span>
-                <span class="desc">{r.description ?? "—"}</span>
-                <span class="meta">
-                  {r.language && <span>{r.language}</span>}
-                  <span>★ {r.stars}</span>
-                  <span>{fmt(r.updatedAt)}</span>
-                </span>
-              </a>
-            ))}
-          </div>
-        ) : (
-          <p class="empty">公開リポジトリを取得できませんでした。</p>
-        )}
-      </section>
-
-      <section id="activity">
-        <h2>GitHub Activity</h2>
-        {contributions && (
-          <>
-            <div class="cal-total">{contributions.total} contributions in the last year</div>
-            <div class="calendar-wrap">
-              <div class="calendar" role="img" aria-label={`過去1年で ${contributions.total} contributions`}>
-                {contributions.weeks.flatMap((w) =>
-                  w.map((d) => <span data-l={d.level} title={`${d.date}: ${d.count}`} />),
-                )}
-              </div>
-            </div>
-          </>
-        )}
-        {activity.length > 0 ? (
-          <ul class="activity">
-            {activity.map((a) => (
-              <li>
-                <time datetime={a.createdAt}>{fmt(a.createdAt)}</time>
-                <div>
-                  <a href={a.url} target="_blank" rel="noopener">{a.summary}</a>
-                  <div class="repo-name">{a.repo}</div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p class="empty">最近の公開アクティビティはありません。</p>
-        )}
-      </section>
-
-      <footer>
-        <div>© {new Date().getFullYear()} {profile.name}</div>
-        <div>last build: {builtAt} JST · <a href={`https://github.com/${user}/my_website`}>source</a></div>
-      </footer>
+      ))}
     </div>
-  </body>
-</html>
+  </section>
+
+  <section id="career">
+    <h2>Career</h2>
+    <ol class="timeline">
+      {career.map((c) => (
+        <li>
+          <div class="period">{c.period}</div>
+          <div>
+            <h3>{c.company}</h3>
+            <div class="role">{c.role}</div>
+            <p>{c.description}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section id="articles">
+    <h2>Articles</h2>
+    {latest.length > 0 ? (
+      <div class="cards">
+        {latest.map((a) => (
+          <a class="card" href={`/articles/${a.id}/`}>
+            <span class="card-title">{a.data.title}</span>
+            <span class="desc">{a.data.description}</span>
+            <span class="meta">{fmtDate(a.data.date)}</span>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <p class="empty">まだ記事はありません。</p>
+    )}
+    {articles.length > latest.length && <p class="more"><a href="/articles/">すべての記事 →</a></p>}
+  </section>
+
+  <section id="projects">
+    <h2>Projects</h2>
+    {repos.length > 0 ? (
+      <div class="cards">
+        {repos.map((r) => (
+          <a class="card" href={r.url} target="_blank" rel="noopener">
+            <span class="card-title mono">{r.name}</span>
+            <span class="desc">{r.description ?? "—"}</span>
+            <span class="meta">
+              {r.language && <span>{r.language}</span>}
+              <span>★ {r.stars}</span>
+              <span>{fmt(r.updatedAt)}</span>
+            </span>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <p class="empty">公開リポジトリを取得できませんでした。</p>
+    )}
+  </section>
+
+  {stats && (
+    <section id="github">
+      <h2>GitHub</h2>
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-label">Commits / month</span>
+          <span class="stat-value">{avg(stats.commitsPerMonth)}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Merged PRs / month</span>
+          <span class="stat-value">{avg(stats.mergedPrsPerMonth)}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Contributions / year</span>
+          <span class="stat-value">{stats.total}</span>
+        </div>
+      </div>
+      <p class="stat-note">直近 {avg(stats.months)} か月の平均（公開リポジトリ）</p>
+      <div class="calendar-wrap">
+        <div class="calendar" role="img" aria-label={`過去1年で ${stats.total} contributions`}>
+          {stats.weeks.flatMap((w) => w.map((d) => <span data-l={d.level} title={`${d.date}: ${d.count}`} />))}
+        </div>
+      </div>
+    </section>
+  )}
+</Base>

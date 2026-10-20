@@ -30,7 +30,6 @@ export const career: {
   company: string;
   role: string;
   description: string;
-  tags?: string[];
 }[] = [
   // TODO: 新しい順に記載
   {
@@ -38,13 +37,6 @@ export const career: {
     company: "株式会社 DATUM STUDIO",
     role: "Data Engineer",
     description: "データ基盤の設計・構築・運用支援。",
-    tags: ["Snowflake", "dbt"],
-  },
-  {
-    period: "20XX – 20XX",
-    company: "前職",
-    role: "Engineer",
-    description: "業務内容を記載。",
   },
 ];
 

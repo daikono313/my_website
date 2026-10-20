@@ -21,3 +21,17 @@ GitHub リポジトリの Secrets に以下を登録:
 
 - `CLOUDFLARE_API_TOKEN` — テンプレート「Edit Cloudflare Workers」で作成
 - `CLOUDFLARE_ACCOUNT_ID`
+
+## 記事を書く
+
+`src/content/articles/<slug>.md` を追加すると `/articles/<slug>/` として公開される。
+
+```md
+---
+title: タイトル
+date: 2026-10-20
+description: 一覧やカードに出る概要
+tags: [Astro, Cloudflare]
+draft: true   # true の間は本番ビルドに含まれない（npm run dev では表示）
+---
+```

@@ -1,21 +1,11 @@
 ---
-import "../styles/global.css";
+import Base from "../layouts/Base.astro";
 ---
 
-<!doctype html>
-<html lang="ja">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>404 Not Found</title>
-  </head>
-  <body>
-    <div class="container">
-      <header class="hero">
-        <div class="prompt"><b>~</b> $ cd ./this-page</div>
-        <h1>404</h1>
-        <p class="summary">No such file or directory. <a href="/">cd ~</a></p>
-      </header>
-    </div>
-  </body>
-</html>
+<Base title="404 Not Found">
+  <header class="hero">
+    <div class="prompt"><b>~</b> $ cd ./this-page</div>
+    <h1>404</h1>
+    <p class="summary">No such file or directory. <a href="/">cd ~</a></p>
+  </header>
+</Base>
