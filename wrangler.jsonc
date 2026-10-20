@@ -1,10 +1,16 @@
 {
   "name": "de",
   "compatibility_date": "2026-10-01",
+  // /api/* だけ Worker（src/worker.ts）を通し、それ以外は静的ファイルをそのまま返す（Worker の実行回数を使わない）
+  "main": "src/worker.ts",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "404-page"
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
   },
+  // Secrets（ダッシュボードで設定）: TURNSTILE_SECRET_KEY / CONTACT_GAS_URL / CONTACT_GAS_SECRET
+  "observability": { "enabled": true },
   // PR ごとの Workers Preview（npx wrangler preview）。静的サイトなので Preview 専用の設定はなし
   "previews": {}
 }

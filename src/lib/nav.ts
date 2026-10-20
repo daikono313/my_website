@@ -1,1 +1,1 @@
-export type NavKey = "home" | "articles" | "weekly" | "search"; // search はタブなし（右上の検索欄）
+export type NavKey = "home" | "articles" | "weekly" | "contact" | "search"; // search はタブなし（右上の検索欄）

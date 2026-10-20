@@ -30,6 +30,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Cloudflare Web Analytics のサイト token（HTML に載る公開値なので Variables で管理）
           PUBLIC_CF_ANALYTICS_TOKEN: ${{ vars.CF_ANALYTICS_TOKEN }}
+          # Cloudflare Turnstile のサイトキー（公開値）。未設定ならテスト用キーになり、本番ではフォーム送信が失敗する
+          PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
       - run: bash scripts/security-scan.sh
       - run: npx wrangler deploy
         env:
