@@ -1,4 +1,4 @@
-// Weekly Tech Report 用の共通処理（週の計算・HTML/フィードの簡易パース・文字列の無害化）
+// Weekly Tech Note 用の共通処理（週の計算・HTML/フィードの簡易パース・文字列の無害化）
 
 const JST = 9 * 3600 * 1000;
 const DAY = 86400 * 1000;

@@ -24,7 +24,7 @@ GitHub リポジトリの Secrets に以下を登録:
 
 ## コンテンツ
 
-サイト構成は CLAUDE.md、Weekly Tech Report の作り方は `.claude/skills/weekly-tech-report/SKILL.md` を参照。
+サイト構成は CLAUDE.md、Weekly Tech Note の作り方は `.claude/skills/weekly-tech-report/SKILL.md` を参照。
 
 ## 記事を書く
 

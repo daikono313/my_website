@@ -11,7 +11,7 @@
 | 7 | デプロイ | `main` push で Cloudflare Workers へ自動デプロイ。毎日 06:00 JST に GitHub 活動を再取得して再デプロイ | `.github/workflows/deploy.yml` |
 | 8 | 確認・切り戻し | 本番 URL 表示確認。問題時は `git revert` → PR、緊急時は `npx wrangler rollback` | Cloudflare バージョン管理 |
 
-## Weekly Tech Report
+## Weekly Tech Note
 | # | 実施内容 | 担保する仕組み |
 |---|----------|----------------|
 | 1 | 毎週月曜 08:00 JST に `weekly-report.yml` が前週分を収集し、Cloudflare Workers AI（無料枠）で生成する | GitHub Actions（schedule）。手動実行は Actions 画面から `week` を指定 |

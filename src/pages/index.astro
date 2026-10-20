@@ -27,7 +27,6 @@ const avg = (n: number) => n.toFixed(1);
 
 <Base title={`${profile.name} — ${profile.title}`} nav="home">
   <header class="hero">
-    <div class="prompt"><b>~</b> $ whoami</div>
     <h1>
       {profile.name}
       {profile.nameJa && <span class="name-ja">{profile.nameJa}</span>}
@@ -103,7 +102,7 @@ const avg = (n: number) => n.toFixed(1);
   </section>
 
   <section id="weekly">
-    <h2>Weekly Tech Report</h2>
+    <h2>Weekly Tech Note</h2>
     <PostCards posts={weeklies.slice(0, 3)} total={weeklies.length} moreHref="/weekly/" empty="まだレポートはありません。" />
   </section>
 

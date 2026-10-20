@@ -5,7 +5,7 @@ export type PostKind = "articles" | "weekly";
 
 export const KINDS: Record<PostKind, { label: string; path: string }> = {
   articles: { label: "Articles", path: "/articles/" },
-  weekly: { label: "Weekly Tech Report", path: "/weekly/" },
+  weekly: { label: "Weekly Tech Note", path: "/weekly/" },
 };
 
 export type Post = {

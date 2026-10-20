@@ -6,7 +6,7 @@ file="$1"; items="$2"
 sha=$(git rev-parse HEAD); base=$(git rev-parse origin/main)
 mkdir -p .security-review
 cat > ".security-review/$sha.md" <<MD
-## 🔒 Pre-push Security Review（Weekly Tech Report 自動生成）
+## 🔒 Pre-push Security Review（Weekly Tech Note 自動生成）
 
 Verdict: PASS
 - Commit: \`$sha\` / Base: \`$base\`
