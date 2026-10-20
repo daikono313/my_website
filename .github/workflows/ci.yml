@@ -63,7 +63,7 @@ jobs:
           URL: ${{ steps.preview.outputs.preview_url }}
         run: |
           gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
-            --body "🔍 **Preview**: $URL（commit ${HEAD_SHA:0:7}）" --edit-last --create-if-none
+            --body "🔍 **Preview**: [$URL]($URL) (commit ${HEAD_SHA:0:7})" --edit-last --create-if-none
 
   # PR を閉じたらプレビューを削除する
   cleanup-preview:
