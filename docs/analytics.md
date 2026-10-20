@@ -30,10 +30,29 @@ IP アドレス・User-Agent の全文・リファラーの URL 全体・Cookie 
 
 ## 使い方
 読み取り専用トークン（`CLAUDE.md` の cf CLI と同じもの。Account Analytics: Read を含む）を使う。
+
+### 仮想ビュー `pageviews`
+Analytics Engine の SQL API は `CREATE VIEW` と日本語の列名に対応していないため、`npm run pv` が次のように補う。
+- SQL 中の `FROM pageviews` を `scripts/analytics/view.sql` のサブクエリに展開する（本番ホストのみ・時刻は日本時間）
+- 出力の見出しを日本語に置き換える
+
+| 列 | 表示名 | 内容 |
+|---|---|---|
+| `time` | 日時 | 記録時刻（日本時間） |
+| `day` | 日付 | 記録日（日本時間） |
+| `path` | ページ | パス |
+| `referrer` | 流入元 | 流入元のホスト名（空は `-` と表示） |
+| `country` | 国 | 国コード |
+| `device` | 端末 | `desktop` / `mobile` / `bot` |
+| `weight` | 件数 | サンプリング倍率。件数は `SUM(weight)` で数える |
+| `views` | 表示数 | 集計結果に `AS views` と付けるとこの見出しになる |
+
 ```bash
-npm run pv -- scripts/analytics/queries/top-pages.sql   # よく見られているページ
-npm run pv -- scripts/analytics/queries/daily.sql       # 日別の推移
-npm run pv -- scripts/analytics/queries/referrers.sql   # 流入元
-npm run pv -- "SELECT blob3 AS country, SUM(_sample_interval) AS views FROM my_website_pageviews GROUP BY country ORDER BY views DESC"
+npm run pv -- scripts/analytics/queries/recent.sql      # 直近のアクセス一覧
+npm run pv -- scripts/analytics/queries/top-pages.sql   # よく見られているページ（7日）
+npm run pv -- scripts/analytics/queries/daily.sql       # 日別の推移（30日）
+npm run pv -- scripts/analytics/queries/referrers.sql   # 流入元（30日）
+npm run pv -- "SELECT country, SUM(weight) AS views FROM pageviews GROUP BY country ORDER BY views DESC"
 ```
+元の表（`my_website_pageviews`、列は `blob1` など）もそのまま指定できる。
 SQL の文法: https://developers.cloudflare.com/analytics/analytics-engine/sql-reference/
