@@ -15,7 +15,7 @@
 | # | 実施内容 | 担保する仕組み |
 |---|----------|----------------|
 | 1 | 毎週月曜 08:00 JST に `weekly-report.yml` が前週分を収集し、Cloudflare Workers AI（無料枠）で生成する | GitHub Actions（schedule）。手動実行は Actions 画面から `week` を指定 |
-| 2 | `validate-weekly --check-links`・build・`security-scan` がすべて通ったら、自動診断レポートを作って push → PR → 診断結果をコメント → CI（`build-and-scan`・Preview）を起動 | ワークフロー内のステップ、pre-push hook |
+| 2 | `validate-weekly --check-links`・build・`security-scan` がすべて通ったら、自動診断レポートを作って push → PR → 診断結果をコメント → bot の PR で承認待ちになる CI（`build-and-scan`・Preview）を承認 | ワークフロー内のステップ、pre-push hook |
 | 3 | Preview URL で内容と影響度を確認し、問題なければマージする（AI の誤りは公開前にここで止める）。質が足りなければ skill `weekly-tech-report` で Claude が書き直す | ブランチ保護（PR 必須・CI 必須） |
 
 ## 初回セットアップ

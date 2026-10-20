@@ -31,6 +31,8 @@ const SYSTEM = `あなたはデータ基盤エンジニア向けの週刊テッ�
 - 項目は必ず id（例: "i12"）で参照してください。URL は出力しないでください。
 - 出力は日本語で、指定の JSON オブジェクトだけを返してください（前後に説明やコードブロックを付けない）。
 - 文中で HTML タグ、Markdown のリンク・強調記法を使わないでください。
+- ステータス（GA / Preview / Beta など）・日付・数値は、項目の title / text に書かれている場合だけ使ってください。書かれていなければ status は "その他" にしてください。
+- highlights・actions・trends も、選んだ項目の内容だけを根拠にしてください。
 
 影響度の基準:
 - "red": 破壊的変更・非推奨化と廃止日・セキュリティ修正・期限付きの移行
@@ -181,7 +183,9 @@ for (const x of ai) {
 md.push("");
 
 md.push("## Pickup 記事");
-const reading = pick(out.reading, ["blog"]).slice(0, 5);
+// AI × データで紹介した記事は Pickup に重ねない
+const shownInAi = new Set(ai.map((x) => x.id));
+const reading = pick(out.reading, ["blog"]).filter((x) => !shownInAi.has(x.id)).slice(0, 5);
 if (reading.length === 0) md.push("今週は該当なし");
 reading.forEach((x, i) => {
   const it = byId.get(x.id);

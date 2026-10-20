@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: write # weekly/<週> ブランチの push
       pull-requests: write # PR 作成とコメント
-      actions: write # ci.yml を workflow_dispatch で起動（GITHUB_TOKEN で作った PR では CI が自動で起動しないため）
+      actions: write # bot が作った PR の CI は「承認待ち」になるため、このワークフローで承認する
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -108,4 +108,15 @@ jobs:
           MD
           url=$(gh pr create --base main --head "weekly/$WEEK" --title "weekly: $WEEK週のテックレポート" --body-file pr-body.md)
           gh pr comment "$url" --body-file "$report"
-          gh workflow run ci.yml --ref "weekly/$WEEK" -f pr_number="${url##*/}"
+          # bot（github-actions）が作った PR の pull_request CI は承認待ちで止まるので、自分で作った PR の分だけ承認する
+          for i in $(seq 1 12); do
+            run_id=$(gh run list --workflow ci.yml --branch "weekly/$WEEK" --event pull_request --json databaseId,status \
+              --jq '[.[] | select(.status == "action_required" or .status == "waiting")][0].databaseId // empty')
+            [ -n "$run_id" ] && break
+            sleep 10
+          done
+          if [ -n "${run_id:-}" ] && gh api -X POST "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/approve"; then
+            echo "approved CI run $run_id"
+          else
+            gh pr comment "$url" --body "⚠️ CI が承認待ちのままです。Actions 画面で該当の実行を開き「Approve and run」を押してください。"
+          fi
