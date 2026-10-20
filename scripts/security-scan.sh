@@ -33,7 +33,16 @@ else
   ng "dist not found (npm run build を先に実行)"
 fi
 
-# 5. GitHub Actions
+# 5. コンテンツ（記事・ウィークリー）: 生 HTML と危険なリンクを禁止（コードブロックは除く）
+bad_content=""
+for f in $(git ls-files 'src/content/*.md'); do
+  prose=$(awk '/^```/{c=!c; next} !c' "$f" | sed -E 's/`[^`]*`//g')
+  echo "$prose" | grep -qE '<\/?[a-zA-Z][^>]*>' && bad_content+="$f: raw HTML"$'\n'
+  echo "$prose" | grep -qiE '\]\((javascript|data|vbscript):' && bad_content+="$f: dangerous link"$'\n'
+done
+[ -z "$bad_content" ] && ok "content: no raw HTML / dangerous links" || { ng "content"; printf "%s" "$bad_content"; }
+
+# 6. GitHub Actions
 wf=.github/workflows
 if [ -d $wf ]; then
   unpinned=$(grep -hE '^\s*-?\s*uses:' $wf/*.y*ml | grep -vE '@[0-9a-f]{40}' || true)

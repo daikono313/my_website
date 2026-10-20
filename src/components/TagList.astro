@@ -1,0 +1,13 @@
+---
+// タグをタグ検索へのリンクとして表示する
+interface Props {
+  tags: string[];
+}
+const { tags } = Astro.props;
+---
+
+{tags.length > 0 && (
+  <ul class="tags">
+    {tags.map((t) => <li><a href={`/search/?tag=${encodeURIComponent(t)}`}>{t}</a></li>)}
+  </ul>
+)}

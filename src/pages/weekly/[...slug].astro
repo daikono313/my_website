@@ -1,0 +1,39 @@
+---
+import Base from "../../layouts/Base.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import TagList from "../../components/TagList.astro";
+import { profile } from "../../data/profile";
+import { getWeeklies, fmtDate, fmtPeriod, type WeeklyEntry } from "../../lib/posts";
+import { render } from "astro:content";
+
+export async function getStaticPaths() {
+  const weeklies = await getWeeklies(); // 新しい順
+  return weeklies.map((w, i) => ({
+    params: { slug: w.id },
+    props: { weekly: w, newer: weeklies[i - 1], older: weeklies[i + 1] },
+  }));
+}
+
+const { weekly, newer, older } = Astro.props as { weekly: WeeklyEntry; newer?: WeeklyEntry; older?: WeeklyEntry };
+const { Content } = await render(weekly);
+const d = weekly.data;
+---
+
+<Base title={`${d.title} — ${profile.name}`} description={d.description} nav="weekly">
+  <PageHeader prompt="~/weekly" command={`cat ${weekly.id}.md`} title={d.title}>
+    <span>対象期間 {fmtPeriod(d.weekStart, d.weekEnd)}（生成 {fmtDate(d.date)}）</span>
+    <TagList tags={d.tags} />
+  </PageHeader>
+  <aside class="highlights-box" aria-label="今週の注目ポイント">
+    <h2>今週の注目ポイント</h2>
+    <ul class="highlights">{d.highlights.map((h) => <li>{h}</li>)}</ul>
+  </aside>
+  <article class="prose">
+    <Content />
+  </article>
+  <nav class="pager" aria-label="前後のレポート">
+    {older ? <a href={`/weekly/${older.id}/`}>← {older.data.title}</a> : <span />}
+    {newer ? <a href={`/weekly/${newer.id}/`}>{newer.data.title} →</a> : <span />}
+  </nav>
+  <p class="ai-note">このレポートは AI（Claude）が公開情報をもとに作成し、公開前に人が確認しています。正確な情報は各リンク先の一次情報を確認してください。</p>
+</Base>

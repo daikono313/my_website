@@ -2,10 +2,16 @@
 import Base from "../layouts/Base.astro";
 import { profile, skills, career, featuredRepos } from "../data/profile";
 import { getRepos, getStats } from "../lib/github";
-import { getArticles, fmtDate } from "../lib/articles";
+import PostCards from "../components/PostCards.astro";
+import { getPosts, fmtDate } from "../lib/posts";
 
 const user = profile.githubUser;
-const [allRepos, stats, articles] = await Promise.all([getRepos(user), getStats(user), getArticles()]);
+const [allRepos, stats, articles, weeklies] = await Promise.all([
+  getRepos(user),
+  getStats(user),
+  getPosts("articles"),
+  getPosts("weekly"),
+]);
 
 const featured = featuredRepos
   .map((n) => allRepos.find((r) => r.name === n))
@@ -15,12 +21,11 @@ const repos = [
   ...allRepos.filter((r) => !featuredRepos.includes(r.name) && r.name !== "my_website"),
 ].slice(0, 6);
 
-const latest = articles.slice(0, 3);
 const fmt = (iso: string) => fmtDate(new Date(iso));
 const avg = (n: number) => n.toFixed(1);
 ---
 
-<Base title={`${profile.name} — ${profile.title}`}>
+<Base title={`${profile.name} — ${profile.title}`} nav="home">
   <header class="hero">
     <div class="prompt"><b>~</b> $ whoami</div>
     <h1>
@@ -111,19 +116,11 @@ const avg = (n: number) => n.toFixed(1);
 
   <section id="articles">
     <h2>Articles</h2>
-    {latest.length > 0 ? (
-      <div class="cards">
-        {latest.map((a) => (
-          <a class="card" href={`/articles/${a.id}/`}>
-            <span class="card-title">{a.data.title}</span>
-            <span class="desc">{a.data.description}</span>
-            <span class="meta">{fmtDate(a.data.date)}</span>
-          </a>
-        ))}
-      </div>
-    ) : (
-      <p class="empty">まだ記事はありません。</p>
-    )}
-    {articles.length > latest.length && <p class="more"><a href="/articles/">すべての記事 →</a></p>}
+    <PostCards posts={articles.slice(0, 3)} total={articles.length} moreHref="/articles/" empty="まだ記事はありません。" />
+  </section>
+
+  <section id="weekly">
+    <h2>Weekly Tech Report</h2>
+    <PostCards posts={weeklies.slice(0, 3)} total={weeklies.length} moreHref="/weekly/" empty="まだレポートはありません。" />
   </section>
 </Base>

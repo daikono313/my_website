@@ -6,5 +6,6 @@ export default defineConfig({
   build: { inlineStylesheets: "never" },
   // Shiki は inline style を出力するため、class ベースの Prism を使う
   markdown: { syntaxHighlight: "prism" },
-  vite: { build: { sourcemap: false } },
+  // 小さいスクリプトもインライン化せず外部ファイルにする（CSP script-src 'self' のため）
+  vite: { build: { sourcemap: false, assetsInlineLimit: 0 } },
 });

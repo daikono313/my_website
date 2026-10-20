@@ -1,0 +1,16 @@
+---
+// 各ページ上部の「$ コマンド」風の見出し。meta スロットに日付やタグを入れる
+interface Props {
+  prompt: string;
+  command: string;
+  title: string;
+  compact?: boolean;
+}
+const { prompt, command, title, compact = true } = Astro.props;
+---
+
+<header class:list={["hero", { compact }]}>
+  <div class="prompt"><b>{prompt}</b> $ {command}</div>
+  <h1>{title}</h1>
+  {Astro.slots.has("default") && <div class="article-meta"><slot /></div>}
+</header>

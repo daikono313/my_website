@@ -11,6 +11,13 @@
 | 7 | デプロイ | `main` push で Cloudflare Workers へ自動デプロイ。毎日 06:00 JST に GitHub 活動を再取得して再デプロイ | `.github/workflows/deploy.yml` |
 | 8 | 確認・切り戻し | 本番 URL 表示確認。問題時は `git revert` → PR、緊急時は `npx wrangler rollback` | Cloudflare バージョン管理 |
 
+## Weekly Tech Report
+| # | 実施内容 | 担保する仕組み |
+|---|----------|----------------|
+| 1 | 毎週月曜 08:00 JST に Claude ルーティンが skill `weekly-tech-report` を実行し、前週分のレポートを作る | Claude ルーティン（契約プランの範囲内） |
+| 2 | `scripts/validate-weekly.mjs --check-links` で形式とリンク切れを検査し、`/prepush-security-review` で診断してから PR を作る | skill の手順、pre-push hook |
+| 3 | PR の Preview URL で内容を確認し、問題なければマージする（AI の誤りは公開前にここで止める） | ブランチ保護（PR 必須） |
+
 ## 初回セットアップ
 - `npm install`（`prepare` で `core.hooksPath=.githooks` を設定）
 - GitHub Secrets: `CLOUDFLARE_API_TOKEN`（Edit Cloudflare Workers テンプレート）、`CLOUDFLARE_ACCOUNT_ID`

@@ -10,3 +10,37 @@
 - GitHub アカウントは daikono313（git/gh とも自動切替済み）。
 - **push / PR 作成前に必ず `/prepush-security-review` を実行する**。pre-push hook が `.security-review/<SHA>.md` の `Verdict: PASS` を要求する。PR 作成後はレポートを PR コメントに投稿する。
 - リリースフロー: docs/RELEASE.md
+
+## サイト構成
+
+Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信している。本番は https://de.daisuke-harato.workers.dev
+
+### ページ（上部のタブ: Home / Articles / Weekly / Search）
+| URL | ファイル | 内容 |
+|---|---|---|
+| `/` | `src/pages/index.astro` | Profile → Skills → Career → Projects → GitHub 統計 → Articles（最新3件）→ Weekly Tech Report（最新3件） |
+| `/articles/` `/articles/<slug>/` | `src/pages/articles/` | 手書きの技術記事の一覧と詳細 |
+| `/weekly/` `/weekly/<weekStart>/` | `src/pages/weekly/` | Weekly Tech Report の一覧と詳細（注目ポイント・前後の週へのリンク・AI 生成の注記） |
+| `/search/` | `src/pages/search.astro` + `src/client/search.ts` | キーワード・種類・タグによる検索。`?q=` `?kind=` `?tag=` で条件を共有できる |
+| `/search-index.json` | `src/pages/search-index.json.ts` | 検索インデックス（ビルド時に生成） |
+
+### コンテンツとデータ
+| 置き場所 | 内容 | 追加方法 |
+|---|---|---|
+| `src/content/articles/*.md` | 技術記事 | 手で書いて PR |
+| `src/content/weekly/<weekStart>.md` | Weekly Tech Report | skill `weekly-tech-report`（Claude ルーティンが毎週実行）→ PR → 人が確認してマージ |
+| `src/content.config.ts` | 上記2つの frontmatter スキーマ | |
+| `src/data/profile.ts` | プロフィール・スキル・経歴・強調するリポジトリ | 手で編集 |
+| `src/lib/github.ts` | GitHub 統計（ビルド時に API から取得。公開リポジトリのみ） | |
+
+### コード構成
+- `src/layouts/Base.astro`: 全ページ共通（head、タブ、フッター、本番だけ Web Analytics）
+- `src/components/`: `SiteNav`（タブ）、`PageHeader`（見出し）、`PostCards`（トップのカード）、`PostList`（一覧）、`TagList`（タグ → タグ検索へのリンク）
+- `src/lib/posts.ts`: 記事とウィークリーを共通の `Post` 型で扱う（一覧・トップ・検索で共用）
+- `src/styles/global.css`: スタイルはこの1ファイル。色は `:root` の変数で、ダークモードに対応
+
+### 守ること
+- **CSP**（`public/_headers`）: インラインのスクリプト・スタイルは使わない（`style="..."` も不可）。スクリプトは `src/client/` に置き、Astro に外部ファイルとして出力させる
+- クライアント JS で DOM を組み立てるときは `textContent` を使い、`innerHTML` は使わない
+- コンテンツの Markdown に生の HTML・`javascript:` リンクを書かない（`scripts/security-scan.sh` が検出する）
+

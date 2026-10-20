@@ -1,12 +1,15 @@
 ---
 import "../styles/global.css";
 import { profile } from "../data/profile";
+import SiteNav from "../components/SiteNav.astro";
+import type { NavKey } from "../lib/nav";
 
 interface Props {
   title: string;
   description?: string;
+  nav?: NavKey;
 }
-const { title, description = profile.summary } = Astro.props;
+const { title, description = profile.summary, nav } = Astro.props;
 
 // Cloudflare Web Analytics。本番デプロイ時だけ token を渡す（Preview・ローカルでは計測しない）
 // 値を HTML 属性に埋め込むため、想定形式（32桁の16進数）以外は無視する
@@ -28,10 +31,11 @@ const beacon = /^[0-9a-f]{32}$/.test(analyticsToken ?? "") ? JSON.stringify({ to
   </head>
   <body>
     <div class="container">
+      <SiteNav current={nav} />
       <slot />
       <footer>
         <div>© {new Date().getFullYear()} {profile.name}</div>
-        <div><a href="/">home</a> · <a href="/articles/">articles</a> · <a href={`https://github.com/${profile.githubUser}/my_website`}>source</a></div>
+        <div><a href={`https://github.com/${profile.githubUser}/my_website`}>source</a></div>
       </footer>
     </div>
   </body>

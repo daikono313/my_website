@@ -22,6 +22,10 @@ GitHub リポジトリの Secrets に以下を登録:
 - `CLOUDFLARE_API_TOKEN` — テンプレート「Edit Cloudflare Workers」で作成
 - `CLOUDFLARE_ACCOUNT_ID`
 
+## コンテンツ
+
+サイト構成は CLAUDE.md、Weekly Tech Report の作り方は `.claude/skills/weekly-tech-report/SKILL.md` を参照。
+
 ## 記事を書く
 
 `src/content/articles/<slug>.md` を追加すると `/articles/<slug>/` として公開される。

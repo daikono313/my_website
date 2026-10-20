@@ -1,7 +1,9 @@
 ---
 import Base from "../../layouts/Base.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import TagList from "../../components/TagList.astro";
 import { profile } from "../../data/profile";
-import { getArticles, fmtDate } from "../../lib/articles";
+import { getArticles, fmtDate, type ArticleEntry } from "../../lib/posts";
 import { render } from "astro:content";
 
 export async function getStaticPaths() {
@@ -9,19 +11,15 @@ export async function getStaticPaths() {
   return articles.map((a) => ({ params: { slug: a.id }, props: { article: a } }));
 }
 
-const { article } = Astro.props;
+const { article } = Astro.props as { article: ArticleEntry };
 const { Content } = await render(article);
 ---
 
-<Base title={`${article.data.title} — ${profile.name}`} description={article.data.description}>
-  <header class="hero compact">
-    <div class="prompt"><b>~/articles</b> $ cat {article.id}.md</div>
-    <h1>{article.data.title}</h1>
-    <div class="article-meta">
-      <time datetime={article.data.date.toISOString()}>{fmtDate(article.data.date)}</time>
-      {article.data.tags.length > 0 && <ul class="tags">{article.data.tags.map((t) => <li>{t}</li>)}</ul>}
-    </div>
-  </header>
+<Base title={`${article.data.title} — ${profile.name}`} description={article.data.description} nav="articles">
+  <PageHeader prompt="~/articles" command={`cat ${article.id}.md`} title={article.data.title}>
+    <time datetime={article.data.date.toISOString()}>{fmtDate(article.data.date)}</time>
+    <TagList tags={article.data.tags} />
+  </PageHeader>
   <article class="prose">
     <Content />
   </article>
