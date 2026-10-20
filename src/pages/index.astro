@@ -22,6 +22,9 @@ const repos = [
 ].slice(0, 6);
 
 const fmt = (iso: string) => fmtDate(new Date(iso));
+// コントリビューションの描画は直近約3か月（13週）だけ
+const recentWeeks = stats?.weeks.slice(-13) ?? [];
+const recentTotal = recentWeeks.flat().reduce((n, d) => n + d.count, 0);
 const avg = (n: number) => n.toFixed(1);
 ---
 
@@ -82,15 +85,11 @@ const avg = (n: number) => n.toFixed(1);
           <span class="stat-label">Merged PRs / month</span>
           <span class="stat-value">{avg(stats.mergedPrsPerMonth)}</span>
         </div>
-        <div class="stat">
-          <span class="stat-label">Contributions / year</span>
-          <span class="stat-value">{stats.total}</span>
-        </div>
       </div>
       <p class="stat-note">直近 {avg(stats.months)} か月の平均（公開リポジトリ）</p>
       <div class="calendar-wrap">
-        <div class="calendar" role="img" aria-label={`過去1年で ${stats.total} contributions`}>
-          {stats.weeks.flatMap((w) => w.map((d) => <span data-l={d.level} title={`${d.date}: ${d.count}`} />))}
+        <div class="calendar" role="img" aria-label={`直近3か月で ${recentTotal} contributions`}>
+          {recentWeeks.flatMap((w) => w.map((d) => <span data-l={d.level} title={`${d.date}: ${d.count}`} />))}
         </div>
       </div>
     </section>

@@ -57,7 +57,6 @@ export async function getRepos(user: string): Promise<Repo[]> {
 }
 
 export type Stats = {
-  total: number;
   weeks: ContributionDay[][];
   months: number; // 集計期間（月）
   commitsPerMonth: number;
@@ -95,7 +94,6 @@ export async function getStats(user: string): Promise<Stats | null> {
               contributions { totalCount }
             }
             contributionCalendar {
-              totalContributions
               weeks { contributionDays { date contributionCount contributionLevel } }
             }
           }
@@ -123,7 +121,6 @@ export async function getStats(user: string): Promise<Stats | null> {
       FOURTH_QUARTILE: 4,
     };
     return {
-      total: cc.contributionCalendar.totalContributions,
       weeks: cc.contributionCalendar.weeks.map((w: any) =>
         w.contributionDays.map((d: any) => ({
           date: d.date,
