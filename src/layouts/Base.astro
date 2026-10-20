@@ -7,6 +7,11 @@ interface Props {
   description?: string;
 }
 const { title, description = profile.summary } = Astro.props;
+
+// Cloudflare Web Analytics。本番デプロイ時だけ token を渡す（Preview・ローカルでは計測しない）
+// 値を HTML 属性に埋め込むため、想定形式（32桁の16進数）以外は無視する
+const analyticsToken = import.meta.env.PUBLIC_CF_ANALYTICS_TOKEN;
+const beacon = /^[0-9a-f]{32}$/.test(analyticsToken ?? "") ? JSON.stringify({ token: analyticsToken }) : null;
 ---
 
 <!doctype html>
@@ -19,6 +24,7 @@ const { title, description = profile.summary } = Astro.props;
     <meta name="description" content={description} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
+    {beacon && <script is:inline type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={beacon}></script>}
   </head>
   <body>
     <div class="container">
