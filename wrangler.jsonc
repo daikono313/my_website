@@ -4,5 +4,7 @@
   "assets": {
     "directory": "./dist",
     "not_found_handling": "404-page"
-  }
+  },
+  // PR ごとの Workers Preview（npx wrangler preview）。静的サイトなので Preview 専用の設定はなし
+  "previews": {}
 }
