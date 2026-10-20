@@ -18,10 +18,21 @@ const clean = (v: FormDataEntryValue | null, singleLine: boolean) =>
     .replace(singleLine ? /[\u0000-\u001f\u007f]/g : /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, singleLine ? " " : "")
     .trim();
 
+// Worker が返すレスポンスにも、静的ファイル（public/_headers）と同等のセキュリティヘッダーを付ける
+const SECURITY_HEADERS = {
+  "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+  "Cache-Control": "no-store",
+};
+const reply = (body: string | null, status: number, headers: Record<string, string> = {}) =>
+  new Response(body, { status, headers: { ...SECURITY_HEADERS, ...headers } });
+
 const back = (req: Request, status: "sent" | string) => {
   const url = new URL("/contact/", req.url);
   url.searchParams.set(status === "sent" ? "sent" : "error", status === "sent" ? "1" : status);
-  return new Response(null, { status: 303, headers: { Location: url.pathname + url.search, "Cache-Control": "no-store" } });
+  return reply(null, 303, { Location: url.pathname + url.search });
 };
 
 async function verifyTurnstile(token: string, secret: string, ip: string | null): Promise<boolean> {
@@ -35,17 +46,17 @@ async function verifyTurnstile(token: string, secret: string, ip: string | null)
 }
 
 async function handleContact(req: Request, env: Env): Promise<Response> {
-  if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405, headers: { Allow: "POST" } });
+  if (req.method !== "POST") return reply("Method Not Allowed", 405, { Allow: "POST" });
 
   // 自サイトのフォーム以外からの送信を拒否する
   const origin = req.headers.get("Origin");
-  if (origin !== new URL(req.url).origin) return new Response("Forbidden", { status: 403 });
+  if (origin !== new URL(req.url).origin) return reply("Forbidden", 403);
 
   if (!env.TURNSTILE_SECRET_KEY || !env.CONTACT_GAS_URL || !env.CONTACT_GAS_SECRET) return back(req, "unavailable");
 
   const type = req.headers.get("Content-Type") ?? "";
   if (!type.startsWith("application/x-www-form-urlencoded") && !type.startsWith("multipart/form-data")) {
-    return new Response("Unsupported Media Type", { status: 415 });
+    return reply("Unsupported Media Type", 415);
   }
   if (Number(req.headers.get("Content-Length") ?? 0) > 32_000) return back(req, "invalid");
 
@@ -83,7 +94,7 @@ export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const { pathname } = new URL(req.url);
     if (pathname === "/api/contact") return handleContact(req, env);
-    if (pathname.startsWith("/api/")) return new Response("Not Found", { status: 404 });
+    if (pathname.startsWith("/api/")) return reply("Not Found", 404);
     return env.ASSETS.fetch(req);
   },
 } satisfies ExportedHandler<Env>;
