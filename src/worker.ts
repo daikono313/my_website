@@ -57,9 +57,17 @@ async function handlePageview(req: Request, env: Env): Promise<Response> {
   if (req.method !== "POST") return reply("Method Not Allowed", 405, { Allow: "POST" });
   const url = new URL(req.url);
   if (req.headers.get("Origin") !== url.origin) return reply("Forbidden", 403);
+  // Content-Length がない（chunked）送信もあるため、本文の長さも確認する
   if (Number(req.headers.get("Content-Length") ?? 0) > 1_000) return reply(null, 413);
+  const text = await req.text();
+  if (text.length > 1_000) return reply(null, 413);
 
-  const data = (await req.json().catch(() => null)) as { p?: unknown; r?: unknown } | null;
+  let data: { p?: unknown; r?: unknown } | null = null;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return reply(null, 400);
+  }
   const path = String(data?.p ?? "");
   if (!PATH_RE.test(path)) return reply(null, 400);
 
