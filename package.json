@@ -8,7 +8,8 @@
     "preview": "astro build && wrangler dev",
     "deploy": "astro build && wrangler deploy",
     "prepare": "git config core.hooksPath .githooks || true",
-    "security:scan": "bash scripts/security-scan.sh"
+    "security:scan": "bash scripts/security-scan.sh",
+    "pv": "bash scripts/analytics/query.sh"
   },
   "dependencies": {
     "astro": "7.4.1"

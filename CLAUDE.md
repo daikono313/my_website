@@ -3,7 +3,7 @@
 ## 大前提: 無料枠のみ
 - **有料プラン・従量課金が発生する機能は使わない**（Cloudflare・GitHub・その他すべて）。提案や実装の前に無料枠で使えるかを確認し、上限（リクエスト数・保存期間など）がある場合はそれも明記する。
 - 有料機能が必要になりそうな場合は、実装せずに無料の代替案と一緒にユーザーへ相談する。
-- 現在使っている無料枠: Cloudflare Workers Free（静的アセット配信・Workers Previews・`/api/*` の Worker・Workers Logs）、Cloudflare Turnstile、Google Apps Script（MailApp は1日100通まで）、Cloudflare Workers AI（1日 10,000 Neurons。Free プランは超過してもエラーになるだけで課金されない）、Cloudflare Web Analytics、GitHub Free（公開リポジトリの Actions・ブランチ保護）
+- 現在使っている無料枠: Cloudflare Workers Free（静的アセット配信・Workers Previews・`/api/*` の Worker・Workers Logs）、Cloudflare Turnstile、Google Apps Script（MailApp は1日100通まで）、Cloudflare Workers AI（1日 10,000 Neurons。Free プランは超過してもエラーになるだけで課金されない）、Cloudflare Web Analytics、Workers Analytics Engine（書き込み1日10万件・クエリ1日1万回、保持3か月）、GitHub Free（公開リポジトリの Actions・ブランチ保護）
 
 ## 運用
 
@@ -23,6 +23,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 | `/api/contact` | `src/worker.ts` | フォームの受付。Origin 確認 → 入力検証 → Turnstile 検証 → Google Apps Script に転送（Apps Script が Gmail で送る） |
 | `/articles/` `/articles/<slug>/` | `src/pages/articles/` | 手書きの技術記事の一覧と詳細 |
 | `/weekly/` `/weekly/<weekStart>/` | `src/pages/weekly/` | Weekly Tech Note の一覧と詳細（注目ポイント・前後の週へのリンク・AI 生成の注記） |
+| `/api/pv` | `src/worker.ts` + `src/client/pv.ts` | ページ表示の記録（本番のみ）→ Workers Analytics Engine。SQL での分析方法は docs/analytics.md |
 | `/search/` | `src/pages/search.astro` + `src/client/search.ts` | キーワード・種類・タグによる検索。`?q=` `?kind=` `?tag=` で条件を共有できる |
 | `/search-index.json` | `src/pages/search-index.json.ts` | 検索インデックス（ビルド時に生成） |
 
@@ -37,7 +38,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 
 ### コード構成
 - `src/worker.ts`: Worker のエントリ。`wrangler.jsonc` の `run_worker_first: ["/api/*"]` で `/api/*` だけを処理し、それ以外は静的ファイルをそのまま返す（Worker の実行回数を使わない）
-- `src/layouts/Base.astro`: 全ページ共通（head、タブ、フッター、本番だけ Web Analytics）
+- `src/layouts/Base.astro`: 全ページ共通（head、タブ、フッター、本番だけ Web Analytics と `/api/pv` への記録）
 - `src/components/`: `SiteNav`（タブ）、`PageHeader`（見出し）、`PostCards`（トップのカード）、`PostList`（一覧）、`TagList`（タグ → タグ検索へのリンク）
 - `src/lib/posts.ts`: 記事とウィークリーを共通の `Post` 型で扱う（一覧・トップ・検索で共用）
 - `src/styles/global.css`: スタイルはこの1ファイル。色は `:root` の変数で、ダークモードに対応
@@ -47,6 +48,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 - **CSP**（`public/_headers`）: インラインのスクリプト・スタイルは使わない（`style="..."` も不可）。スクリプトは `src/client/` に置き、Astro に外部ファイルとして出力させる
 - クライアント JS で DOM を組み立てるときは `textContent` を使い、`innerHTML` は使わない
 - コンテンツの Markdown に生の HTML・`javascript:` リンクを書かない（`scripts/security-scan.sh` が検出する）
+- アクセス記録に IP・UA 全文・リファラーの URL 全体・Cookie を保存しない（docs/analytics.md）
 - 問い合わせの送信先アドレスは Apps Script のスクリプトプロパティにだけ置く。リポジトリ・Worker・ページに書かない
 
 ## Cloudflare の設定確認（cf CLI）
