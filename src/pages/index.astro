@@ -85,13 +85,16 @@ const avg = (n: number) => n.toFixed(1);
           <span class="stat-label">Merged PRs / month</span>
           <span class="stat-value">{avg(stats.mergedPrsPerMonth)}</span>
         </div>
-      </div>
-      <p class="stat-note">直近 {avg(stats.months)} か月の平均（公開リポジトリ）</p>
-      <div class="calendar-wrap">
-        <div class="calendar" role="img" aria-label={`直近3か月で ${recentTotal} contributions`}>
-          {recentWeeks.flatMap((w) => w.map((d) => <span data-l={d.level} title={`${d.date}: ${d.count}`} />))}
+        <div class="stat">
+          <span class="stat-label">Last 3 months</span>
+          <div class="calendar-wrap">
+            <div class="calendar" role="img" aria-label={`直近3か月で ${recentTotal} contributions`}>
+              {recentWeeks.flatMap((w) => w.map((d) => <span data-l={d.level} title={`${d.date}: ${d.count}`} />))}
+            </div>
+          </div>
         </div>
       </div>
+      <p class="stat-note">直近 {avg(stats.months)} か月の平均（公開リポジトリ）</p>
     </section>
   )}
 
