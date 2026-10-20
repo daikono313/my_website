@@ -1,9 +1,17 @@
 ---
 name: weekly-tech-report
-description: データ基盤・OSS・AI×データ・注目記事の Weekly Tech Report を作成し、src/content/weekly/ に追加して PR を出す。Claude ルーティン（毎週月曜）から実行される。手動で特定の週を作り直すときにも使う。
+description: データ基盤・OSS・AI×データ・注目記事の Weekly Tech Report を Claude が手動で作成し、src/content/weekly/ に追加して PR を出す。通常は GitHub Actions + Cloudflare Workers AI が毎週自動生成するので、この skill は自動生成の質が足りないときの作り直しや、特定の週を丁寧に作るときに使う。
 ---
 
 # Weekly Tech Report
+
+## 作成方法は2つ
+| 方法 | いつ | 仕組み |
+|---|---|---|
+| 自動（通常） | 毎週月曜 08:00 JST | `.github/workflows/weekly-report.yml` が `scripts/weekly/collect.mjs`（収集）→ `generate.mjs`（Workers AI で選定・要約）→ 検証 → PR まで行う。無料枠内 |
+| 手動（この skill） | 自動生成の質が足りないとき、特定の週を作り直すとき | Claude が一次情報を読んで書く。自動版の PR があれば、そのブランチ上で書き直してよい |
+
+どちらも同じテンプレート・検証・リリースフローを使う。
 
 読者は「データ基盤を作る・運用するエンジニア」。リリース情報の羅列ではなく、**今週何が変わり、自分は何をすべきか** が5分で分かることを目指す。
 
@@ -21,10 +29,10 @@ description: データ基盤・OSS・AI×データ・注目記事の Weekly Tech
 4. 直近2週分のレポートを読み、続報が必要な項目（Preview→GA の予告、廃止日など）を控える。
 
 ## 2. 情報収集
-`SOURCES.md` の情報源を順に確認し、**対象週に公開・更新されたもの**だけを集める。
+`scripts/weekly/sources.mjs` の情報源を順に確認し（`node scripts/weekly/collect.mjs --week <weekStart>` で対象週の候補一覧を取れる）、**対象週に公開・更新されたもの**だけを集める。
 - 製品リリースノート: ページを取得し、日付が対象週の項目を抜き出す。
 - OSS: `gh api repos/<owner>/<repo>/releases?per_page=10` で `published_at` が対象週のリリースを取る（pre-release は「RC」と明記）。
-- AI×データ: 製品リリースノートの AI 関連と、SOURCES の AI 項目。
+- AI×データ: 製品リリースノートの AI 関連と、sources.mjs の ai 区分。
 - ブログ: 対象週の記事から、データ基盤エンジニアにとって**実務上の学びがあるもの**を3〜5本選ぶ（宣伝記事・入門の焼き直しは除外）。
 - 更新がなかった情報源も記録する（「調査範囲」に書く）。
 
@@ -85,7 +93,7 @@ tags: [<本文に登場する主な製品・OSS名。表記は既存レポート
 - 更新なし: <一覧>
 ```
 
-分量の目安は 1,500〜3,000 字。重要度の低い項目は「その他」にまとめて、1行ずつにする。
+分量の目安は本文 5,000〜10,000 字。重要度の低い項目は「その他」にまとめて1行にし、リンクだけ並べる。
 
 ## 5. 検証
 1. `node scripts/validate-weekly.mjs src/content/weekly/<weekStart>.md --check-links` を実行し、すべて OK になるまで直す（リンク切れ・HTML 混入・期間の不整合を検出する）。

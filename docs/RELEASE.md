@@ -14,13 +14,15 @@
 ## Weekly Tech Report
 | # | 実施内容 | 担保する仕組み |
 |---|----------|----------------|
-| 1 | 毎週月曜 08:00 JST に Claude ルーティンが skill `weekly-tech-report` を実行し、前週分のレポートを作る | Claude ルーティン（契約プランの範囲内） |
-| 2 | `scripts/validate-weekly.mjs --check-links` で形式とリンク切れを検査し、`/prepush-security-review` で診断してから PR を作る | skill の手順、pre-push hook |
-| 3 | PR の Preview URL で内容を確認し、問題なければマージする（AI の誤りは公開前にここで止める） | ブランチ保護（PR 必須） |
+| 1 | 毎週月曜 08:00 JST に `weekly-report.yml` が前週分を収集し、Cloudflare Workers AI（無料枠）で生成する | GitHub Actions（schedule）。手動実行は Actions 画面から `week` を指定 |
+| 2 | `validate-weekly --check-links`・build・`security-scan` がすべて通ったら、自動診断レポートを作って push → PR → 診断結果をコメント → CI（`build-and-scan`・Preview）を起動 | ワークフロー内のステップ、pre-push hook |
+| 3 | Preview URL で内容と影響度を確認し、問題なければマージする（AI の誤りは公開前にここで止める）。質が足りなければ skill `weekly-tech-report` で Claude が書き直す | ブランチ保護（PR 必須・CI 必須） |
 
 ## 初回セットアップ
 - `npm install`（`prepare` で `core.hooksPath=.githooks` を設定）
 - GitHub Secrets: `CLOUDFLARE_API_TOKEN`（Edit Cloudflare Workers テンプレート）、`CLOUDFLARE_ACCOUNT_ID`
+- GitHub Secrets: `CLOUDFLARE_AI_TOKEN`（Workers AI 権限だけのトークン。Weekly の自動生成用）
+- GitHub Actions の設定で「Actions に PR の作成を許可」を有効にする（Weekly の自動 PR 用）
 - GitHub Variables: `CF_ANALYTICS_TOKEN`（Cloudflare Web Analytics のサイト token。本番デプロイ時のみ埋め込む）
 - GitHub Environment `production` を作成（必要なら承認者を設定）
 - Preview URL は既定で公開。限定したい場合は Cloudflare Access で保護

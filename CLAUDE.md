@@ -3,7 +3,7 @@
 ## 大前提: 無料枠のみ
 - **有料プラン・従量課金が発生する機能は使わない**（Cloudflare・GitHub・その他すべて）。提案や実装の前に無料枠で使えるかを確認し、上限（リクエスト数・保存期間など）がある場合はそれも明記する。
 - 有料機能が必要になりそうな場合は、実装せずに無料の代替案と一緒にユーザーへ相談する。
-- 現在使っている無料枠: Cloudflare Workers Free（静的アセット配信・Workers Previews）、Cloudflare Web Analytics、GitHub Free（公開リポジトリの Actions・ブランチ保護）
+- 現在使っている無料枠: Cloudflare Workers Free（静的アセット配信・Workers Previews）、Cloudflare Workers AI（1日 10,000 Neurons。Free プランは超過してもエラーになるだけで課金されない）、Cloudflare Web Analytics、GitHub Free（公開リポジトリの Actions・ブランチ保護）
 
 ## 運用
 
@@ -28,7 +28,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 | 置き場所 | 内容 | 追加方法 |
 |---|---|---|
 | `src/content/articles/*.md` | 技術記事 | 手で書いて PR |
-| `src/content/weekly/<weekStart>.md` | Weekly Tech Report | skill `weekly-tech-report`（Claude ルーティンが毎週実行）→ PR → 人が確認してマージ |
+| `src/content/weekly/<weekStart>.md` | Weekly Tech Report | 毎週月曜に GitHub Actions + Workers AI が自動生成して PR → 人が確認してマージ。手動で作り直すときは skill `weekly-tech-report` |
 | `src/content.config.ts` | 上記2つの frontmatter スキーマ | |
 | `src/data/profile.ts` | プロフィール・スキル・経歴・強調するリポジトリ | 手で編集 |
 | `src/lib/github.ts` | GitHub 統計（ビルド時に API から取得。公開リポジトリのみ） | |
@@ -38,6 +38,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 - `src/components/`: `SiteNav`（タブ）、`PageHeader`（見出し）、`PostCards`（トップのカード）、`PostList`（一覧）、`TagList`（タグ → タグ検索へのリンク）
 - `src/lib/posts.ts`: 記事とウィークリーを共通の `Post` 型で扱う（一覧・トップ・検索で共用）
 - `src/styles/global.css`: スタイルはこの1ファイル。色は `:root` の変数で、ダークモードに対応
+- `scripts/weekly/`: Weekly Tech Report の自動生成（`sources.mjs` 情報源 / `collect.mjs` 収集 / `generate.mjs` Workers AI で生成・描画 / `auto-review.sh` 自動診断レポート）。AI には項目 ID だけを返させ、リンクはスクリプトが収集した URL から差し込む
 
 ### 守ること
 - **CSP**（`public/_headers`）: インラインのスクリプト・スタイルは使わない（`style="..."` も不可）。スクリプトは `src/client/` に置き、Astro に外部ファイルとして出力させる

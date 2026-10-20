@@ -58,8 +58,8 @@ if (checkLinks) {
     }),
   );
   for (const [url, st] of results) {
-    // 403/429 は bot 対策のことがあるため警告にとどめる
-    if (st === 403 || st === 429) console.warn(`⚠️  ${st} ${url}`);
+    // 403/429/999 は bot 対策のことがあるため警告にとどめる（999 は LinkedIn）
+    if (st === 403 || st === 429 || st === 999) console.warn(`⚠️  ${st} ${url}`);
     else if (typeof st !== "number" || st >= 400) errors.push(`リンク切れ (${st}): ${url}`);
   }
   console.log(`links checked: ${uniq.length}`);
