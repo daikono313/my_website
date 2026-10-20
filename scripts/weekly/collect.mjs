@@ -18,6 +18,16 @@ async function get(url, accept) {
   return res.text();
 }
 
+// 例: "Oct 05, 2026: Enforce CoCo policy with MDM ( Preview ) ¶" → "Enforce CoCo policy with MDM (Preview)"
+const cleanSnowflakeTitle = (t) =>
+  t
+    .replace(/\s*\|\s*Snowflake Documentation$/, "")
+    .replace(/¶/g, "")
+    .replace(/^[A-Z][a-z]+\.? \d{1,2}, \d{4}:\s*/, "")
+    .replace(/\(\s+/g, "(")
+    .replace(/\s+\)/g, ")")
+    .trim();
+
 const collectors = {
   async feed(src) {
     return parseFeed(await get(src.url))
@@ -39,7 +49,7 @@ const collectors = {
         const page = await get(url);
         const title = stripHtml(page.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? page.match(/<title>([^<]*)/i)?.[1] ?? path);
         const desc = decode(page.match(/<meta name="description" content="([^"]*)"/i)?.[1] ?? "");
-        items.push({ title: title.replace(/\s*\|\s*Snowflake Documentation$/, ""), url, date, text: desc });
+        items.push({ title: cleanSnowflakeTitle(title), url, date, text: desc });
       } catch {
         items.push({ title: path.split("/").pop(), url, date, text: "" });
       }
@@ -56,7 +66,8 @@ const collectors = {
     return (await res.json())
       .filter((r) => !r.draft && inWeek(new Date(r.published_at), week))
       .map((r) => ({
-        title: `${src.repo.split("/")[1]} ${r.tag_name}${r.prerelease ? "（pre-release）" : ""}`,
+        // タグにプロジェクト名が含まれていれば重ねない（例: apache-arrow-26.0.0）
+        title: `${r.tag_name.toLowerCase().includes(src.repo.split("/")[1].toLowerCase()) ? r.tag_name : `${src.repo.split("/")[1]} ${r.tag_name}`}${r.prerelease ? "（pre-release）" : ""}`,
         url: r.html_url,
         date: new Date(r.published_at),
         text: (r.body ?? "").replace(/\r/g, ""),
