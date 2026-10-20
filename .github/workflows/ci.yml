@@ -51,8 +51,8 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          set -o pipefail
-          url=$(npx wrangler preview --name "pr-$PR_NUMBER" --message "PR #$PR_NUMBER $HEAD_SHA" --json | jq -er '.preview.urls[0]')
+          npx wrangler preview --name "pr-$PR_NUMBER" --message "PR #$PR_NUMBER $HEAD_SHA" --json > preview.json || { cat preview.json; exit 1; }
+          url=$(jq -er '.preview.urls[0]' preview.json) || { cat preview.json; exit 1; }
           echo "preview_url=$url" >> "$GITHUB_OUTPUT"
       - name: Comment preview URL
         env:
