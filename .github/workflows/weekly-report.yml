@@ -1,0 +1,105 @@
+name: Weekly Tech Report
+
+on:
+  schedule:
+    - cron: "0 23 * * 0" # 毎週月曜 08:00 JST に前週分を作成
+  workflow_dispatch:
+    inputs:
+      week:
+        description: "対象週の開始日（月曜, YYYY-MM-DD）。空なら前週"
+        required: false
+
+concurrency:
+  group: weekly-report
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # weekly/<週> ブランチの push
+      pull-requests: write # PR 作成とコメント
+      actions: write # ci.yml を workflow_dispatch で起動（GITHUB_TOKEN で作った PR では CI が自動で起動しないため）
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      - name: Collect
+        id: collect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WEEK: ${{ inputs.week }}
+        run: |
+          if [ -n "$WEEK" ] && ! [[ "$WEEK" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then echo "invalid week: $WEEK"; exit 1; fi
+          node scripts/weekly/collect.mjs ${WEEK:+--week "$WEEK"} > items.json
+          week=$(jq -r .weekStart items.json)
+          echo "week=$week" >> "$GITHUB_OUTPUT"
+          echo "items=$(jq '.items | length' items.json)" >> "$GITHUB_OUTPUT"
+          if [ -f "src/content/weekly/$week.md" ] || git ls-remote --exit-code origin "refs/heads/weekly/$week" >/dev/null; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"; echo "weekly/$week は作成済みのためスキップ"
+          fi
+
+      - name: Generate with Workers AI
+        if: steps.collect.outputs.skip != 'true'
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_AI_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN }}
+          WEEK: ${{ steps.collect.outputs.week }}
+        run: node scripts/weekly/generate.mjs items.json > "src/content/weekly/$WEEK.md"
+
+      - name: Validate
+        if: steps.collect.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WEEK: ${{ steps.collect.outputs.week }}
+        run: |
+          node scripts/validate-weekly.mjs "src/content/weekly/$WEEK.md" --check-links
+          git add "src/content/weekly/$WEEK.md"
+          npm run build
+          bash scripts/security-scan.sh
+
+      - name: Commit, review, push, PR
+        if: steps.collect.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WEEK: ${{ steps.collect.outputs.week }}
+          ITEMS: ${{ steps.collect.outputs.items }}
+        run: |
+          file="src/content/weekly/$WEEK.md"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "weekly/$WEEK"
+          git commit -m "weekly: $WEEK週のテックレポート（Workers AI 自動生成）"
+          report=$(bash scripts/weekly/auto-review.sh "$file" "$ITEMS")
+          git push -u origin "weekly/$WEEK" # pre-push hook がレポートと自動検査を確認する
+          cat > pr-body.md <<MD
+          ## 概要
+          $WEEK週の Weekly Tech Report（Cloudflare Workers AI による自動生成）。
+
+          ## 変更種別
+          - [x] feat（機能・コンテンツ追加）
+
+          ## 変更内容
+          - \`$file\` を追加（収集 $ITEMS 件から AI が選定・要約）
+
+          ## 確認（マージ前に人が見る）
+          - [ ] Preview URL で表示を確認
+          - [ ] 「今週のアクション」と影響度（🔴🟡🟢）が妥当か
+          - [ ] 要約がリンク先の内容と食い違っていないか
+          - [x] 自動診断 **Verdict: PASS**（結果は PR コメント参照）
+
+          ## リリース影響
+          - [x] なし
+          MD
+          url=$(gh pr create --base main --head "weekly/$WEEK" --title "weekly: $WEEK週のテックレポート" --body-file pr-body.md)
+          gh pr comment "$url" --body-file "$report"
+          gh workflow run ci.yml --ref "weekly/$WEEK" -f pr_number="${url##*/}"

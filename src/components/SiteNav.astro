@@ -1,0 +1,23 @@
+---
+// ページ上部のバー。左にタブ、右に常設の検索欄（/search/?q= へ GET 送信。JS なしでも動く）
+import type { NavKey } from "../lib/nav";
+
+interface Props {
+  current?: NavKey;
+}
+const { current } = Astro.props;
+const tabs: { key: NavKey; label: string; href: string }[] = [
+  { key: "home", label: "Home", href: "/" },
+  { key: "articles", label: "Articles", href: "/articles/" },
+  { key: "weekly", label: "Weekly", href: "/weekly/" },
+];
+---
+
+<nav class="site-nav" aria-label="サイト内">
+  <div class="site-tabs">
+    {tabs.map((t) => <a href={t.href} aria-current={t.key === current ? "page" : undefined}>{t.label}</a>)}
+  </div>
+  <form class="nav-search" action="/search/" method="get" role="search">
+    <input name="q" type="search" placeholder="Search…" aria-label="サイト内を検索" autocomplete="off" />
+  </form>
+</nav>

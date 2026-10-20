@@ -1,32 +1,16 @@
 ---
 import Base from "../../layouts/Base.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import PostList from "../../components/PostList.astro";
 import { profile } from "../../data/profile";
-import { getArticles, fmtDate } from "../../lib/articles";
+import { getPosts } from "../../lib/posts";
 
-const articles = await getArticles();
+const posts = await getPosts("articles");
 ---
 
-<Base title={`Articles — ${profile.name}`}>
-  <header class="hero compact">
-    <div class="prompt"><b>~/articles</b> $ ls -t</div>
-    <h1>Articles</h1>
-  </header>
+<Base title={`Articles — ${profile.name}`} nav="articles">
+  <PageHeader prompt="~/articles" command="ls -t" title="Articles" />
   <section>
-    {articles.length > 0 ? (
-      <ul class="article-list">
-        {articles.map((a) => (
-          <li>
-            <time datetime={a.data.date.toISOString()}>{fmtDate(a.data.date)}</time>
-            <div>
-              <a href={`/articles/${a.id}/`}>{a.data.title}</a>
-              {a.data.draft && <span class="draft">draft</span>}
-              <p>{a.data.description}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    ) : (
-      <p class="empty">まだ記事はありません。</p>
-    )}
+    <PostList posts={posts} empty="まだ記事はありません。" />
   </section>
 </Base>

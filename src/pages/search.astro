@@ -1,0 +1,36 @@
+---
+import Base from "../layouts/Base.astro";
+import PageHeader from "../components/PageHeader.astro";
+import { profile } from "../data/profile";
+import { getAllPosts } from "../lib/posts";
+
+// タグ一覧（件数の多い順）
+const counts = new Map<string, number>();
+for (const p of await getAllPosts()) for (const t of p.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
+const tags = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+---
+
+<Base title={`Search — ${profile.name}`} nav="search">
+  <PageHeader prompt="~" command="grep -ri" title="Search" />
+  <section>
+    <form class="search-form" action="/search/" method="get" role="search">
+      <input id="q" name="q" type="search" placeholder="キーワード（例: Iceberg, CSP）" autocomplete="off" aria-label="キーワード" />
+      <fieldset class="kind-filter">
+        <legend class="sr-only">種類</legend>
+        <label><input type="radio" name="kind" value="" checked /> すべて</label>
+        <label><input type="radio" name="kind" value="articles" /> Articles</label>
+        <label><input type="radio" name="kind" value="weekly" /> Weekly</label>
+      </fieldset>
+    </form>
+    <div class="tag-filter" aria-label="タグで絞り込み">
+      {tags.map(([t, n]) => <a class="tag-chip" href={`/search/?tag=${encodeURIComponent(t)}`} data-tag={t}>{t} <span>{n}</span></a>)}
+    </div>
+    <p id="search-status" class="search-status" aria-live="polite">JavaScript を有効にすると検索できます。</p>
+    <ul id="search-results" class="post-list"></ul>
+  </section>
+</Base>
+
+<script>
+  import { initSearch } from "../client/search";
+  initSearch();
+</script>

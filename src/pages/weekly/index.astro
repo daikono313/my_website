@@ -1,0 +1,31 @@
+---
+import Base from "../../layouts/Base.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import TagList from "../../components/TagList.astro";
+import { profile } from "../../data/profile";
+import { getWeeklies, fmtPeriod } from "../../lib/posts";
+
+const weeklies = await getWeeklies();
+---
+
+<Base title={`Weekly Tech Report — ${profile.name}`} description="データ基盤・OSS・AI×データの1週間の動きをまとめたレポート" nav="weekly">
+  <PageHeader prompt="~/weekly" command="ls -t" title="Weekly Tech Report">
+    <span>データ基盤製品・OSS・AI×データ・注目記事を毎週まとめています</span>
+  </PageHeader>
+  <section>
+    {weeklies.length > 0 ? (
+      <ul class="weekly-list">
+        {weeklies.map((w) => (
+          <li>
+            <a class="post-title" href={`/weekly/${w.id}/`}>{w.data.title}</a>
+            <div class="weekly-period">{fmtPeriod(w.data.weekStart, w.data.weekEnd)}</div>
+            <ul class="highlights compact">{w.data.highlights.map((h) => <li>{h}</li>)}</ul>
+            <TagList tags={w.data.tags} />
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="empty">まだレポートはありません。</p>
+    )}
+  </section>
+</Base>

@@ -1,0 +1,27 @@
+---
+import { fmtDate, type Post } from "../lib/posts";
+
+// トップページ用のカード一覧。total が表示件数より多ければ「すべて見る」リンクを出す
+interface Props {
+  posts: Post[];
+  total: number;
+  moreHref: string;
+  empty: string;
+}
+const { posts, total, moreHref, empty } = Astro.props;
+---
+
+{posts.length > 0 ? (
+  <div class="cards">
+    {posts.map((p) => (
+      <a class="card" href={p.url}>
+        <span class="card-title">{p.title}</span>
+        <span class="desc">{p.description}</span>
+        <span class="meta">{fmtDate(p.date)}</span>
+      </a>
+    ))}
+  </div>
+) : (
+  <p class="empty">{empty}</p>
+)}
+{total > posts.length && <p class="more"><a href={moreHref}>すべて見る（{total} 件）→</a></p>}
