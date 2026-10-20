@@ -24,7 +24,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: bash scripts/security-scan.sh
 
-  # PR ごとに Cloudflare Workers Preview（pr-<番号>-my-website.<subdomain>.workers.dev）を作成・更新する。本番には影響しない
+  # PR ごとに Cloudflare Workers Preview（pr-<番号>-dharato.<subdomain>.workers.dev）を作成・更新する。本番には影響しない
   preview:
     needs: build-and-scan
     # fork からの PR には Secrets が渡らないため同一リポジトリのみ
