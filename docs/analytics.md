@@ -25,6 +25,9 @@
 
 IP アドレス・User-Agent の全文・リファラーの URL 全体・Cookie は保存しない。
 
+## 初期設定（済）
+- アカウントで Analytics Engine を有効化済み（未有効だと `wrangler deploy` が code 10089、SQL API が 403 で失敗する。Preview のデプロイでは検出されない）
+
 ## 使い方
 読み取り専用トークン（`CLAUDE.md` の cf CLI と同じもの。Account Analytics: Read を含む）を使う。
 ```bash

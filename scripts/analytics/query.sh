@@ -7,6 +7,9 @@ set -euo pipefail
 : "${CLOUDFLARE_ACCOUNT_ID:?CLOUDFLARE_ACCOUNT_ID が未設定です}"
 sql="${1:?SQL またはファイルパスを指定してください}"
 [[ -f "$sql" ]] && sql=$(cat "$sql")
+# SQL API の出力形式は JSON / JSONEachRow / TabSeparated のみ。列名付きの表にするため JSON を受けて整形する
 curl -sS --fail-with-body "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/analytics_engine/sql" \
   -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-  --data-binary "$sql FORMAT TabSeparatedWithNames"
+  --data-binary "$sql FORMAT JSON" |
+  jq -r '([.meta[].name] | @tsv), (.data[] | [.[]] | @tsv)' | column -t -s $'\t'
+
