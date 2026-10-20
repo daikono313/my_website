@@ -8,7 +8,7 @@ import { profile } from "../../data/profile";
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
 ---
 
-<Base title={`Contact — ${profile.name}`} description="お問い合わせ">
+<Base title={`Contact — ${profile.name}`} description="お問い合わせ" nav="contact">
   <PageHeader prompt="~/contact" command="mail" title="Contact">
     <span>お仕事のご相談・記事へのご意見などはこちらからどうぞ</span>
   </PageHeader>
