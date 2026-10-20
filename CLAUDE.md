@@ -45,3 +45,11 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 - クライアント JS で DOM を組み立てるときは `textContent` を使い、`innerHTML` は使わない
 - コンテンツの Markdown に生の HTML・`javascript:` リンクを書かない（`scripts/security-scan.sh` が検出する）
 
+## Cloudflare の設定確認（cf CLI）
+- `npx cf ...`（devDependency の公式 CLI、技術プレビュー版をバージョン固定）で Cloudflare の設定を確認できる
+- 認証は **読み取り専用トークン**（テンプレート「Read all resources」）。direnv が macOS キーチェーン（`cloudflare-readonly-my_website` / `cloudflare-account-id-my_website`）から `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` に読み込む。値を表示・出力・コミットしない
+- **確認だけに使う**。設定の変更は Cloudflare ダッシュボードか、リポジトリの設定（`wrangler.jsonc`、`public/_headers`）を変えて PR → CI デプロイで行う
+- コマンドは `npx cf cli search "<やりたいこと>"` で探す（検索語にドメイン・ID・トークンなどを入れない）。例:
+  - `npx cf auth whoami` / `npx cf workers scripts search` / `npx cf workers deployments list <script>`
+  - `npx cf workers-builds workers previews list` / `npx cf rum site-info get`
+
