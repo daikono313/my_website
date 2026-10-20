@@ -62,24 +62,6 @@ const avg = (n: number) => n.toFixed(1);
     </ol>
   </section>
 
-  <section id="articles">
-    <h2>Articles</h2>
-    {latest.length > 0 ? (
-      <div class="cards">
-        {latest.map((a) => (
-          <a class="card" href={`/articles/${a.id}/`}>
-            <span class="card-title">{a.data.title}</span>
-            <span class="desc">{a.data.description}</span>
-            <span class="meta">{fmtDate(a.data.date)}</span>
-          </a>
-        ))}
-      </div>
-    ) : (
-      <p class="empty">まだ記事はありません。</p>
-    )}
-    {articles.length > latest.length && <p class="more"><a href="/articles/">すべての記事 →</a></p>}
-  </section>
-
   <section id="projects">
     <h2>Projects</h2>
     {repos.length > 0 ? (
@@ -126,4 +108,22 @@ const avg = (n: number) => n.toFixed(1);
       </div>
     </section>
   )}
+
+  <section id="articles">
+    <h2>Articles</h2>
+    {latest.length > 0 ? (
+      <div class="cards">
+        {latest.map((a) => (
+          <a class="card" href={`/articles/${a.id}/`}>
+            <span class="card-title">{a.data.title}</span>
+            <span class="desc">{a.data.description}</span>
+            <span class="meta">{fmtDate(a.data.date)}</span>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <p class="empty">まだ記事はありません。</p>
+    )}
+    {articles.length > latest.length && <p class="more"><a href="/articles/">すべての記事 →</a></p>}
+  </section>
 </Base>
