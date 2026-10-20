@@ -28,6 +28,8 @@ jobs:
       - run: npm run build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Cloudflare Web Analytics のサイト token（HTML に載る公開値なので Variables で管理）
+          PUBLIC_CF_ANALYTICS_TOKEN: ${{ vars.CF_ANALYTICS_TOKEN }}
       - run: bash scripts/security-scan.sh
       - run: npx wrangler deploy
         env:
