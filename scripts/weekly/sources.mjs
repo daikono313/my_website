@@ -35,7 +35,7 @@ export const SOURCES = [
   // 3. AI × データ（製品リリースノートの AI 関連は生成時に AI 区分へ振り分ける）
   { name: "modelcontextprotocol/modelcontextprotocol", category: "ai", type: "github-releases", repo: "modelcontextprotocol/modelcontextprotocol" },
 
-  // 4. ブログ・記事（読むべき記事の候補）
+  // 4. ブログ・記事（Pickup 記事の候補）
   { name: "Data Engineering Weekly", category: "blog", type: "feed", url: "https://www.dataengineeringweekly.com/feed" },
   { name: "benn.substack", category: "blog", type: "feed", url: "https://benn.substack.com/feed" },
   { name: "Netflix Tech Blog", category: "blog", type: "feed", url: "https://netflixtechblog.com/feed" },

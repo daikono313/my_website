@@ -38,7 +38,7 @@ for (const l of links) {
   if (!/^https:\/\//.test(l)) errors.push(`https 以外のリンク: ${l}`);
 }
 if (/!\[/.test(prose)) errors.push("画像の埋め込みは使わない");
-for (const h of ["## 今週のアクション", "## 横断トレンド", "## 調査範囲"]) {
+for (const h of ["## 今週のアクション", "## トレンド"]) {
   if (!body.includes(h)) errors.push(`必須の見出しがない: ${h}`);
 }
 
