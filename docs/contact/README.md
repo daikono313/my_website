@@ -25,5 +25,6 @@
 | `CONTACT_GAS_URL` | Apps Script の URL |
 | `CONTACT_GAS_SECRET` | Apps Script の `SECRET` と同じ値 |
 
-いずれも「シークレット」（暗号化）として追加する。未設定のあいだ、フォームは「現在利用できません」と表示する。
-Preview には Secrets を入れていないため、Preview のフォームは送信できない（表示の確認だけ）。
+いずれも「シークレット」（暗号化）として追加する。Secrets が未設定のあいだ、送信すると「現在利用できません」と表示する。
+`TURNSTILE_SITE_KEY` が未設定のビルドでは、フォーム自体を出さず「準備中」と表示する（ローカルの `npm run dev` だけ Turnstile のテスト用キーを使う）。
+Preview のビルドにはサイトキーを渡していないため、Preview では「準備中」と表示される。
