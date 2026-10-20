@@ -37,3 +37,15 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # デプロイ後の確認: 問い合わせフォームの設定（Worker の Secrets）が残っているか
+      # トークンなしで送ると、設定が揃っていれば Turnstile の検証で拒否（error=captcha）、欠けていれば error=unavailable になる
+      - name: Smoke test (contact form config)
+        run: |
+          url="https://de.daisuke-harato.workers.dev"
+          loc=$(curl -s -o /dev/null -w '%{redirect_url}' -X POST "$url/api/contact" -H "Origin: $url" -d 'subject=smoke&email=smoke@example.com&message=smoke')
+          echo "redirect: $loc"
+          case "$loc" in
+            *error=captcha*) echo "contact form config OK" ;;
+            *) echo "::error::問い合わせフォームの Secrets が欠けています（TURNSTILE_SECRET_KEY / CONTACT_GAS_URL / CONTACT_GAS_SECRET を「シークレット」として設定してください）"; exit 1 ;;
+          esac
+
