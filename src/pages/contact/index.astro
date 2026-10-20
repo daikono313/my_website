@@ -1,0 +1,40 @@
+---
+import Base from "../../layouts/Base.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import { profile } from "../../data/profile";
+
+// Turnstile のサイトキー（公開値）。未設定のローカル・Preview ではテスト用キー（常に成功）を使う
+// テスト用キーで作ったトークンは本番のシークレットキーでは検証に失敗するので、本番でスパムが通ることはない
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
+---
+
+<Base title={`Contact — ${profile.name}`} description="お問い合わせ">
+  <PageHeader prompt="~/contact" command="mail" title="Contact">
+    <span>お仕事のご相談・記事へのご意見などはこちらからどうぞ</span>
+  </PageHeader>
+  <section>
+    <p id="contact-status" class="contact-status" role="status" aria-live="polite"></p>
+    <form class="contact-form" action="/api/contact" method="post">
+      <label for="subject">問い合わせ概要</label>
+      <input id="subject" name="subject" type="text" required maxlength="100" autocomplete="off" />
+
+      <label for="message">内容</label>
+      <textarea id="message" name="message" required maxlength="5000" rows="10"></textarea>
+
+      <!-- ボット対策の隠し項目（人は入力しない） -->
+      <div class="hp" aria-hidden="true">
+        <label for="website">website</label>
+        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <div class="cf-turnstile" data-sitekey={siteKey} data-theme="auto"></div>
+      <button type="submit">送信する</button>
+    </form>
+  </section>
+</Base>
+
+<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script>
+  import { showContactStatus } from "../../client/contact";
+  showContactStatus();
+</script>

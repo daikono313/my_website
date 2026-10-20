@@ -1,11 +1,10 @@
-// サイトに表示する自己紹介・経歴データ。ここを編集すればページに反映されます。
+// サイトに表示する自己紹介データ。ここを編集すればページに反映されます。
 // TODO の箇所はご自身の情報に置き換えてください。
 
 export const profile = {
   name: "Daisuke Harato",
   nameJa: "", // TODO: 漢字表記（空なら非表示）
   title: "Data Engineer", // TODO
-  location: "Tokyo, Japan", // TODO
   githubUser: "daikono313",
   summary:
     "データ基盤の設計・構築・運用を専門とするエンジニア。最近は AI エージェントによるデータ基盤の自律構築・運用に取り組んでいます。", // TODO
@@ -23,21 +22,6 @@ export const skills: { category: string; items: string[] }[] = [
   { category: "Data", items: ["Snowflake", "dbt", "BigQuery", "Airflow"] },
   { category: "Cloud / Infra", items: ["AWS", "GCP", "Terraform", "Docker"] },
   { category: "AI", items: ["LLM Agents", "Claude"] },
-];
-
-export const career: {
-  period: string;
-  company: string;
-  role: string;
-  description: string;
-}[] = [
-  // TODO: 新しい順に記載
-  {
-    period: "20XX – 現在",
-    company: "株式会社 DATUM STUDIO",
-    role: "Data Engineer",
-    description: "データ基盤の設計・構築・運用支援。",
-  },
 ];
 
 // GitHub の pinned 相当として強調表示するリポジトリ名（空なら最近更新順に自動表示）

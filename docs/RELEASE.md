@@ -23,6 +23,9 @@
 - GitHub Secrets: `CLOUDFLARE_API_TOKEN`（Edit Cloudflare Workers テンプレート）、`CLOUDFLARE_ACCOUNT_ID`
 - GitHub Secrets: `CLOUDFLARE_AI_TOKEN`（Workers AI 権限だけのトークン。Weekly の自動生成用）
 - GitHub Actions の設定で「Actions に PR の作成を許可」を有効にする（Weekly の自動 PR 用）
+- 問い合わせフォーム（手順の詳細は `docs/contact/README.md`）
+  - Cloudflare Turnstile のウィジェットを作り、サイトキーを GitHub Variables `TURNSTILE_SITE_KEY` に、シークレットキーを Worker の Secret `TURNSTILE_SECRET_KEY` に設定
+  - `docs/contact/apps-script.gs` を Google Apps Script にデプロイし、URL と合言葉を Worker の Secrets `CONTACT_GAS_URL` / `CONTACT_GAS_SECRET` に設定
 - GitHub Variables: `CF_ANALYTICS_TOKEN`（Cloudflare Web Analytics のサイト token。本番デプロイ時のみ埋め込む）
 - GitHub Environment `production` を作成（必要なら承認者を設定）
 - Preview URL は既定で公開。限定したい場合は Cloudflare Access で保護

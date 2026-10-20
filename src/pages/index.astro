@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { profile, skills, career, featuredRepos } from "../data/profile";
+import { profile, skills, featuredRepos } from "../data/profile";
 import { getRepos, getStats } from "../lib/github";
 import PostCards from "../components/PostCards.astro";
 import { getPosts, fmtDate } from "../lib/posts";
@@ -32,7 +32,6 @@ const avg = (n: number) => n.toFixed(1);
       {profile.name}
       {profile.nameJa && <span class="name-ja">{profile.nameJa}</span>}
     </h1>
-    <div class="title">{profile.title} · {profile.location}</div>
     <p class="summary">{profile.summary}</p>
     <nav class="links">
       {profile.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label}</a>)}
@@ -49,22 +48,6 @@ const avg = (n: number) => n.toFixed(1);
         </div>
       ))}
     </div>
-  </section>
-
-  <section id="career">
-    <h2>Career</h2>
-    <ol class="timeline">
-      {career.map((c) => (
-        <li>
-          <div class="period">{c.period}</div>
-          <div>
-            <h3>{c.company}</h3>
-            <div class="role">{c.role}</div>
-            <p>{c.description}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
   </section>
 
   <section id="projects">
@@ -122,5 +105,11 @@ const avg = (n: number) => n.toFixed(1);
   <section id="weekly">
     <h2>Weekly Tech Report</h2>
     <PostCards posts={weeklies.slice(0, 3)} total={weeklies.length} moreHref="/weekly/" empty="まだレポートはありません。" />
+  </section>
+
+  <section id="contact">
+    <h2>Contact</h2>
+    <p class="contact-lead">お仕事のご相談や記事へのご意見は、問い合わせフォームからお送りください。</p>
+    <p><a class="button" href="/contact/">問い合わせフォームへ →</a></p>
   </section>
 </Base>

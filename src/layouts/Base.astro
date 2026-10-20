@@ -35,7 +35,7 @@ const beacon = /^[0-9a-f]{32}$/.test(analyticsToken ?? "") ? JSON.stringify({ to
       <slot />
       <footer>
         <div>© {new Date().getFullYear()} {profile.name}</div>
-        <div><a href={`https://github.com/${profile.githubUser}/my_website`}>source</a></div>
+        <div><a href="/contact/">contact</a> · <a href={`https://github.com/${profile.githubUser}/my_website`}>source</a></div>
       </footer>
     </div>
   </body>
