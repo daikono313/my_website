@@ -25,4 +25,4 @@ export const skills: { category: string; items: string[] }[] = [
 ];
 
 // GitHub の pinned 相当として強調表示するリポジトリ名（空なら最近更新順に自動表示）
-export const featuredRepos: string[] = ["agentic-data-platform"];
+export const featuredRepos: string[] = ["auto_create_ontology", "agentic-data-platform"];
