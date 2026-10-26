@@ -110,8 +110,9 @@ jobs:
           gh pr comment "$url" --body-file "$report"
           # bot（github-actions）が作った PR の pull_request CI は承認待ちで止まるので、自分で作った PR の分だけ承認する
           for i in $(seq 1 12); do
-            run_id=$(gh run list --workflow ci.yml --branch "weekly/$WEEK" --event pull_request --json databaseId,status \
-              --jq '[.[] | select(.status == "action_required" or .status == "waiting")][0].databaseId // empty')
+            # 承認待ちは status=completed / conclusion=action_required で返ることがあるため両方を見る
+            run_id=$(gh run list --workflow ci.yml --branch "weekly/$WEEK" --event pull_request --json databaseId,status,conclusion \
+              --jq '[.[] | select(.status == "action_required" or .status == "waiting" or .conclusion == "action_required")][0].databaseId // empty')
             [ -n "$run_id" ] && break
             sleep 10
           done
