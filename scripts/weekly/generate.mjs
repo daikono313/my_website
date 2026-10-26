@@ -52,9 +52,11 @@ const SCHEMA = `{
 }
 
 選び方:
-- platform: category=platform の項目から重要な順に最大15件。AI 関連の項目は ai に回す。
+- platform: category=platform の項目から重要な順に最大20件。AI 関連の項目は ai に回す。
+  - source ごとに最低1件は選ぶ（ai に回したものも数える）。件数の多い source だけで枠を埋めない。
+  - ベンダーの製品発表ブログ（例: Google Cloud Data Analytics）はリリースノートと同等に扱う。
 - oss: category=oss の項目すべて（pre-release はその旨を summary に書く）。
-- ai: AI エージェント・LLM・MCP・セマンティックレイヤーなど AI×データの項目を最大6件（platform と重複させない）。
+- ai: AI エージェント・LLM・MCP・セマンティックレイヤーなど AI×データの項目を最大6件（platform と重複させない）。category=platform の公式発表を優先し、blog は補完に使う。
 - reading: category=blog から、実務上の学びがある記事（設計判断・運用知見・移行事例・性能/コスト検証）を3〜5件。宣伝・入門の焼き直しは除外。
 - actions: red を優先して最大5件。該当がなければ空配列。
 - trends: 2〜3件。個々のリリースの言い換えにせず、複数の動きをまとめた流れを書く。`;
@@ -151,12 +153,25 @@ md.push("");
 
 md.push("## リリースノート（製品別）");
 const platform = pick(out.platform, ["platform"]);
+const ai = pick(out.ai);
+// 安全網: AI が1件も選ばなかった platform の収集元は、新しい順に最大3件をタイトルとリンクだけで載せる（件数の多い収集元に枠を取られて公式発表が消えるのを防ぐ）
+const MISSED_PER_SOURCE = 3;
+const covered = new Set([...platform, ...ai].map((x) => byId.get(x.id).source));
+const missed = Map.groupBy(
+  items.filter((it) => it.category === "platform" && !covered.has(it.source)).sort((a, b) => new Date(b.date) - new Date(a.date)),
+  (it) => it.source,
+);
+for (const [source, its] of missed) {
+  for (const it of its.slice(0, MISSED_PER_SOURCE)) platform.push({ id: it.id, impact: "green", status: "その他", summary: "", fallback: true });
+  console.error(`coverage: ${source} は AI が選ばなかったため ${Math.min(its.length, MISSED_PER_SOURCE)} 件を見出しのみで追加`);
+}
 const bySource = Map.groupBy(platform, (x) => byId.get(x.id).source);
 for (const [source, xs] of bySource) {
   md.push(`### ${source}`);
   for (const x of xs) {
     const it = byId.get(x.id);
-    md.push(`- ${imp(x.impact)} \`${safeText(x.status || "その他").replace(/\\/g, "")}\` ${link(it)}（${mmdd(new Date(it.date))}）: ${safeText(x.summary)}`);
+    const summary = x.fallback ? "（AI 要約なし）" : safeText(x.summary);
+    md.push(`- ${imp(x.impact)} \`${safeText(x.status || "その他").replace(/\\/g, "")}\` ${link(it)}（${mmdd(new Date(it.date))}）: ${summary}`);
   }
   md.push("");
 }
@@ -174,7 +189,6 @@ if (oss.length) {
 md.push("");
 
 md.push("## AI × データ");
-const ai = pick(out.ai);
 if (ai.length === 0) md.push("今週は該当なし");
 for (const x of ai) {
   const it = byId.get(x.id);
