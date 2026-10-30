@@ -214,6 +214,10 @@ footer { padding: 40px 0 60px; border-top: 1px solid var(--border); font-family:
 .contact-form button:disabled { opacity: 0.4; cursor: not-allowed; }
 .contact-form input[type="email"] { font: inherit; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); width: 100%; }
 .contact-form .hint { font-weight: 400; color: var(--muted); }
+/* 入力欄の下の条件（左）と文字数（右） */
+.contact-form .field-hint { display: flex; justify-content: space-between; gap: 12px; margin: -2px 0 0; font-size: 0.78rem; color: var(--muted); }
+.contact-form .field-hint .count { font-family: var(--mono); white-space: nowrap; }
+.contact-form .field-hint .count.near { color: var(--accent); }
 .form-note { font-size: 0.8rem; color: var(--muted); margin: 0; }
 .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 .contact-status:empty { display: none; }
