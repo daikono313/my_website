@@ -18,13 +18,16 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.env.DE
     {siteKey && (
     <form class="contact-form" action="/api/contact" method="post">
       <label for="subject">問い合わせ概要</label>
-      <input id="subject" name="subject" type="text" required maxlength="100" autocomplete="off" />
+      <input id="subject" name="subject" type="text" required maxlength="100" autocomplete="off" aria-describedby="subject-hint" />
+      <p class="field-hint" id="subject-hint"><span>必須・100字以内</span><span class="count" data-for="subject"></span></p>
 
       <label for="email">メールアドレス<span class="hint">（返信先）</span></label>
-      <input id="email" name="email" type="email" required maxlength="254" autocomplete="email" inputmode="email" />
+      <input id="email" name="email" type="email" required maxlength="254" autocomplete="email" inputmode="email" aria-describedby="email-hint" />
+      <p class="field-hint" id="email-hint"><span>必須・例: name@example.com</span></p>
 
       <label for="message">内容</label>
-      <textarea id="message" name="message" required maxlength="5000" rows="10"></textarea>
+      <textarea id="message" name="message" required maxlength="5000" rows="10" aria-describedby="message-hint"></textarea>
+      <p class="field-hint" id="message-hint"><span>必須・5,000字以内</span><span class="count" data-for="message"></span></p>
 
       <!-- ボット対策の隠し項目（人は入力しない） -->
       <div class="hp" aria-hidden="true">
@@ -42,7 +45,8 @@ const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.env.DE
 
 {siteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
 <script>
-  import { showContactStatus, enableSubmitWhenComplete } from "../../client/contact";
+  import { showContactStatus, enableSubmitWhenComplete, showCharCounts } from "../../client/contact";
   showContactStatus();
   enableSubmitWhenComplete();
+  showCharCounts();
 </script>

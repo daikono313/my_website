@@ -1,5 +1,6 @@
 // /contact/ のクライアント処理
 // - 3項目（概要・メールアドレス・内容）がすべて正しく入力されるまで送信ボタンを無効にする
+// - 文字数の上限がある欄に、現在の文字数を表示する
 // - 送信結果（Worker が ?sent=1 / ?error=... でリダイレクトしてくる）を表示する
 const MESSAGES: Record<string, string> = {
   sent: "送信しました。お問い合わせありがとうございます。",
@@ -33,4 +34,19 @@ export function enableSubmitWhenComplete() {
   };
   form.addEventListener("input", update);
   update();
+}
+
+// 文字数の上限がある欄の下に「現在の文字数 / 上限」を表示する（上限は各欄の maxlength）
+export function showCharCounts() {
+  for (const counter of document.querySelectorAll<HTMLElement>(".contact-form .count[data-for]")) {
+    const field = document.getElementById(counter.dataset.for ?? "") as HTMLInputElement | HTMLTextAreaElement | null;
+    if (!field || field.maxLength <= 0) continue;
+    const max = field.maxLength;
+    const update = () => {
+      counter.textContent = `${field.value.length.toLocaleString()} / ${max.toLocaleString()}`;
+      counter.classList.toggle("near", field.value.length >= max * 0.9);
+    };
+    field.addEventListener("input", update);
+    update();
+  }
 }
