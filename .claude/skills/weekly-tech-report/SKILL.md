@@ -8,7 +8,7 @@ description: データ基盤・OSS・AI×データ・注目記事の Weekly Tech
 ## 作成方法は2つ
 | 方法 | いつ | 仕組み |
 |---|---|---|
-| 自動（通常） | 毎週月曜 08:00 JST | `.github/workflows/weekly-report.yml` が `scripts/weekly/collect.mjs`（収集）→ `generate.mjs`（Workers AI で選定・要約）→ 検証 → PR まで行う。無料枠内 |
+| 自動（通常） | 毎週月曜 07:17 JST（予備 12:43 JST） | `.github/workflows/weekly-report.yml` が `scripts/weekly/collect.mjs`（収集）→ `generate.mjs`（Workers AI で選定・要約）→ 検証 → PR まで行う。無料枠内 |
 | 手動（この skill） | 自動生成の質が足りないとき、特定の週を作り直すとき | Claude が一次情報を読んで書く。自動版の PR があれば、そのブランチ上で書き直してよい |
 
 どちらも同じテンプレート・検証・リリースフローを使う。
