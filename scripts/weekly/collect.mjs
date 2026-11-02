@@ -49,7 +49,9 @@ const collectors = {
         const page = await get(url);
         const title = stripHtml(page.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? page.match(/<title>([^<]*)/i)?.[1] ?? path);
         const desc = decode(page.match(/<meta name="description" content="([^"]*)"/i)?.[1] ?? "");
-        items.push({ title: cleanSnowflakeTitle(title), url, date, text: desc });
+        // description がないページは本文から取る（本文が空だと AI が隣の項目の内容で要約を埋めてしまう）
+        const body = desc || stripHtml((page.match(/<article[^>]*>([\s\S]*?)<\/article>/i)?.[1] ?? "").replace(/<(script|style|nav)[\s\S]*?<\/\1>/gi, " "));
+        items.push({ title: cleanSnowflakeTitle(title), url, date, text: body.replace(/^.*?¶\s*/, "") });
       } catch {
         items.push({ title: path.split("/").pop(), url, date, text: "" });
       }
@@ -100,7 +102,10 @@ await Promise.all(
 );
 
 items.sort((a, b) => a.category.localeCompare(b.category) || a.date.localeCompare(b.date));
-items.forEach((it, i) => (it.id = `i${i + 1}`));
+// 同じ収集元に同じタイトルが複数ページで載ることがある（例: Databricks の製品別と月別のリリースノート）ので1件にする
+const seen = new Set();
+const unique = items.filter((it) => !seen.has(`${it.source}\n${it.title}`) && seen.add(`${it.source}\n${it.title}`));
+unique.forEach((it, i) => (it.id = `i${i + 1}`));
 coverage.sort((a, b) => a.category.localeCompare(b.category) || a.source.localeCompare(b.source));
-process.stdout.write(JSON.stringify({ weekStart: week.weekStart, weekEnd: week.weekEnd, items, coverage }, null, 2));
-console.error(`collected ${items.length} items (${coverage.filter((c) => c.status === "failed").length} sources failed)`);
+process.stdout.write(JSON.stringify({ weekStart: week.weekStart, weekEnd: week.weekEnd, items: unique, coverage }, null, 2));
+console.error(`collected ${unique.length} items, ${items.length - unique.length} duplicates removed (${coverage.filter((c) => c.status === "failed").length} sources failed)`);
