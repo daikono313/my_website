@@ -4,11 +4,19 @@ import PageHeader from "../../components/PageHeader.astro";
 import TagList from "../../components/TagList.astro";
 import { profile } from "../../data/profile";
 import { getWeeklies, fmtPeriod } from "../../lib/posts";
+import { collectionLd } from "../../lib/seo";
 
 const weeklies = await getWeeklies();
+const description = "データ基盤製品（Snowflake・Databricks・BigQuery など）、OSS、AI×データの 1 週間の動きと注目記事を、毎週月曜にまとめたレポート。AI が公開情報から作成し、人が確認して公開しています。";
+const ld = collectionLd(Astro.site!, {
+  url: new URL(Astro.url.pathname, Astro.site),
+  name: `Weekly Tech Note｜${profile.name}`,
+  description,
+  items: weeklies.map((w) => ({ url: `/weekly/${w.id}/`, name: w.data.title })),
+});
 ---
 
-<Base title={`Weekly Tech Note — ${profile.name}`} description="データ基盤・OSS・AI×データの1週間の動きをまとめたレポート" nav="weekly">
+<Base title={`Weekly Tech Note（データ基盤・AI の週次レポート）— ${profile.name}`} description={description} nav="weekly" structuredData={[ld]} breadcrumb={[{ name: "Home", path: "/" }, { name: "Weekly Tech Note", path: "/weekly/" }]}>
   <PageHeader title="Weekly Tech Note">
     <span>データ基盤製品・OSS・AI×データ・注目記事を毎週まとめています</span>
   </PageHeader>

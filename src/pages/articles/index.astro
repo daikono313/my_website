@@ -4,12 +4,22 @@ import PageHeader from "../../components/PageHeader.astro";
 import PostList from "../../components/PostList.astro";
 import { profile } from "../../data/profile";
 import { getPosts } from "../../lib/posts";
+import { collectionLd } from "../../lib/seo";
 
 const posts = await getPosts("articles");
+const description = `${profile.name} が書いた技術記事の一覧。${profile.topics.join("・")}、セキュリティ、開発ツールについて、実際に試した手順と判断の基準をまとめています。`;
+const ld = collectionLd(Astro.site!, {
+  url: new URL(Astro.url.pathname, Astro.site),
+  name: `Articles｜${profile.name}`,
+  description,
+  items: posts.map((p) => ({ url: p.url, name: p.title })),
+});
 ---
 
-<Base title={`Articles — ${profile.name}`} nav="articles">
-  <PageHeader title="Articles" />
+<Base title={`Articles（技術記事）— ${profile.name}`} description={description} nav="articles" structuredData={[ld]} breadcrumb={[{ name: "Home", path: "/" }, { name: "Articles", path: "/articles/" }]}>
+  <PageHeader title="Articles">
+    <span>技術記事 {posts.length} 件。実際に試した手順と判断の基準をまとめています</span>
+  </PageHeader>
   <section>
     <PostList posts={posts} empty="まだ記事はありません。" />
   </section>

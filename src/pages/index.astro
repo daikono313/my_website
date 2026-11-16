@@ -4,7 +4,7 @@ import { profile, skills, featuredRepos } from "../data/profile";
 import { getRepos, getStats } from "../lib/github";
 import PostCards from "../components/PostCards.astro";
 import { getPosts, fmtDate } from "../lib/posts";
-import { websiteLd } from "../lib/seo";
+import { profilePageLd } from "../lib/seo";
 
 const user = profile.githubUser;
 const [allRepos, stats, articles, weeklies] = await Promise.all([
@@ -27,14 +27,20 @@ const fmt = (iso: string) => fmtDate(new Date(iso));
 const recentWeeks = stats?.weeks.slice(-13) ?? [];
 const recentTotal = recentWeeks.flat().reduce((n, d) => n + d.count, 0);
 const avg = (n: number) => n.toFixed(1);
+
+// 検索結果に出るタイトルと説明。名前・日本語の肩書き・扱う分野を入れる
+const pageTitle = `${profile.name}｜${profile.titleJa}（${profile.topics.slice(0, 2).join("・")}）`;
+const pageDescription = `${profile.summary}技術記事と、データ基盤・OSS・AI×データの動きを毎週まとめた Weekly Tech Note を公開しています。`;
+const lastUpdated = [...articles, ...weeklies].map((p) => p.date).sort((a, b) => b.getTime() - a.getTime())[0];
 ---
 
-<Base title={`${profile.name} — ${profile.title}`} nav="home" structuredData={[websiteLd(Astro.site!)]}>
+<Base title={pageTitle} description={pageDescription} nav="home" structuredData={[profilePageLd(Astro.site!, lastUpdated)]}>
   <header class="hero">
     <h1>
       {profile.name}
       {profile.nameJa && <span class="name-ja">{profile.nameJa}</span>}
     </h1>
+    <p class="role">{profile.title}（{profile.titleJa}）</p>
     <p class="summary">{profile.summary}</p>
     <nav class="links">
       {profile.links.map((l) => <a href={l.href} target="_blank" rel="noopener">{l.label}</a>)}

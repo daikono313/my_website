@@ -3,7 +3,8 @@ import Base from "../../layouts/Base.astro";
 import PageHeader from "../../components/PageHeader.astro";
 import TagList from "../../components/TagList.astro";
 import { profile } from "../../data/profile";
-import { getArticles, fmtDate, type ArticleEntry } from "../../lib/posts";
+import PostCards from "../../components/PostCards.astro";
+import { getArticles, getPosts, fmtDate, type ArticleEntry } from "../../lib/posts";
 import { articleLd, faqLd } from "../../lib/seo";
 import { render } from "astro:content";
 
@@ -13,8 +14,19 @@ export async function getStaticPaths() {
 }
 
 const { article } = Astro.props as { article: ArticleEntry };
-const { Content } = await render(article);
+const { Content, headings } = await render(article);
 const d = article.data;
+
+// 目次: 本文の ## と ### から作る。見出しが 3 つ未満の短い記事では出さない
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const showToc = toc.filter((h) => h.depth === 2).length >= 3;
+
+// 関連記事: タグが多く重なる順、同じなら新しい順に 3 件。足りなければ新しい記事で埋める
+const others = (await getPosts("articles")).filter((p) => p.id !== article.id);
+const shared = (tags: string[]) => tags.filter((t) => d.tags.includes(t)).length;
+const related = [...others]
+  .sort((a, b) => shared(b.tags) - shared(a.tags) || b.date.getTime() - a.date.getTime())
+  .slice(0, 3);
 
 const structuredData: object[] = [
   articleLd(Astro.site!, {
@@ -37,6 +49,7 @@ if (d.faq?.length) structuredData.push(faqLd(d.faq));
   published={d.date}
   modified={d.updated}
   structuredData={structuredData}
+  breadcrumb={[{ name: "Home", path: "/" }, { name: "Articles", path: "/articles/" }, { name: d.title, path: Astro.url.pathname }]}
 >
   <PageHeader title={d.title}>
     <span>
@@ -51,6 +64,16 @@ if (d.faq?.length) structuredData.push(faqLd(d.faq));
       <h2>この記事の要点</h2>
       <ul class="highlights">{d.summary.map((s) => <li>{s}</li>)}</ul>
     </aside>
+  )}
+  {showToc && (
+    <nav class="toc" aria-labelledby="toc-title">
+      <h2 id="toc-title">目次</h2>
+      <ol>
+        {toc.map((h) => (
+          <li class:list={[`depth-${h.depth}`]}><a href={`#${h.slug}`}>{h.text}</a></li>
+        ))}
+      </ol>
+    </nav>
   )}
   <article class="prose">
     <Content />
@@ -68,4 +91,18 @@ if (d.faq?.length) structuredData.push(faqLd(d.faq));
       </section>
     )}
   </article>
+  <aside class="author-box" aria-label="この記事を書いた人">
+    <p class="author-label">この記事を書いた人</p>
+    <p class="author-name"><a href="/">{profile.name}</a><span>{profile.title}（{profile.titleJa}）</span></p>
+    <p class="author-summary">{profile.summary}</p>
+    <nav class="links">
+      {profile.links.map((l) => <a href={l.href} target="_blank" rel="noopener me">{l.label}</a>)}
+    </nav>
+  </aside>
+  {related.length > 0 && (
+    <section class="related" aria-labelledby="related-title">
+      <h2 id="related-title">関連する記事</h2>
+      <PostCards posts={related} total={related.length} moreHref="/articles/" empty="" />
+    </section>
+  )}
 </Base>

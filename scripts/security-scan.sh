@@ -34,14 +34,30 @@ else
   ng "dist not found (npm run build を先に実行)"
 fi
 
-# 5. コンテンツ（記事・ウィークリー）: 生 HTML と危険なリンクを禁止（コードブロックは除く）
+# 5. コンテンツ（コードブロック・インラインコードは除く）
+#   - 共通: 危険なリンク（javascript:/data:/vbscript:）を禁止
+#   - weekly（AI が外部情報から生成）: 生 HTML を一切禁止
+#   - articles（人が書く）: 生 HTML は許可。ただし実行・読み込み・送信につながるもの、CSP で動かないものは禁止
+#       要素: script iframe frame object embed applet form base meta link style svg math template portal
+#       属性: on〜（イベントハンドラ） style srcdoc formaction、URL 属性の javascript:/data:/vbscript:
 bad_content=""
 for f in $(git ls-files 'src/content/*.md'); do
   prose=$(awk '/^```/{c=!c; next} !c' "$f" | sed -E 's/`[^`]*`//g')
-  echo "$prose" | grep -qE '<\/?[a-zA-Z][^>]*>' && bad_content+="$f: raw HTML"$'\n'
   echo "$prose" | grep -qiE '\]\((javascript|data|vbscript):' && bad_content+="$f: dangerous link"$'\n'
+  case "$f" in
+    src/content/articles/*)
+      # タグが複数行にまたがっても見逃さないよう、改行を空白にしてから調べる
+      prose=$(echo "$prose" | tr '\n' ' ')
+      echo "$prose" | grep -qiE '<\/?(script|iframe|frame|object|embed|applet|form|base|meta|link|style|svg|math|template|portal)([[:space:]/>]|$)' && bad_content+="$f: forbidden HTML element"$'\n'
+      echo "$prose" | grep -qiE '<[a-z][^>]*[[:space:]/](on[a-z]+|style|srcdoc|formaction)[[:space:]]*=' && bad_content+="$f: forbidden HTML attribute"$'\n'
+      echo "$prose" | grep -qiE '<[a-z][^>]*(href|src|action|data|poster|xlink:href)[[:space:]]*=[[:space:]]*["'"'"']?[[:space:]]*(javascript|data|vbscript):' && bad_content+="$f: dangerous URL in HTML"$'\n'
+      ;;
+    *)
+      echo "$prose" | grep -qE '<\/?[a-zA-Z][^>]*>' && bad_content+="$f: raw HTML"$'\n'
+      ;;
+  esac
 done
-[ -z "$bad_content" ] && ok "content: no raw HTML / dangerous links" || { ng "content"; printf "%s" "$bad_content"; }
+[ -z "$bad_content" ] && ok "content: no dangerous HTML / links" || { ng "content"; printf "%s" "$bad_content"; }
 
 # 6. GitHub Actions
 wf=.github/workflows

@@ -230,3 +230,32 @@ footer { padding: 40px 0 60px; border-top: 1px solid var(--border); font-family:
 .faq dt { font-weight: 600; margin: 20px 0 6px; }
 .faq dt::before { content: "Q. "; color: var(--accent); }
 .faq dd { margin: 0 0 0 1.6em; }
+
+/* パンくずリスト（Base.astro の breadcrumb） */
+.breadcrumb { margin-top: 20px; font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+.breadcrumb ol { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.breadcrumb li { overflow-wrap: anywhere; }
+.breadcrumb li + li::before { content: "/"; margin-right: 4px; color: var(--border); }
+.breadcrumb a { color: var(--muted); }
+.breadcrumb [aria-current="page"] { color: var(--text); }
+/* トップの肩書き */
+.hero .role { margin: 4px 0 0; font-family: var(--mono); color: var(--muted); }
+
+/* 記事の目次（本文の ## と ### から生成） */
+.toc { max-width: 720px; margin: 16px 0 8px; padding: 14px 20px; border: 1px solid var(--border); border-radius: 8px; }
+.toc h2 { margin: 0 0 6px; font-size: 0.95rem; }
+.toc h2::before { content: none; }
+.toc ol { margin: 0; padding-left: 1.2em; font-size: 0.9rem; }
+.toc li { margin: 3px 0; }
+.toc li.depth-3 { list-style: none; margin-left: 1em; font-size: 0.85rem; }
+.toc a { color: var(--text); }
+/* 記事末尾の著者紹介 */
+.author-box { max-width: 720px; margin: 8px 0 32px; padding: 16px 20px; border-radius: 8px; background: var(--surface); }
+.author-box p { margin: 0; }
+.author-label { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+.author-box .author-name { margin-top: 4px; font-weight: 600; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.author-name span { font-weight: 400; font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+.author-box .author-summary { margin-top: 6px; font-size: 0.9rem; color: var(--muted); }
+.author-box .links { margin-top: 8px; }
+/* 関連記事 */
+.related { margin-bottom: 48px; }

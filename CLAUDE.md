@@ -26,7 +26,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 | `/api/pv` | `src/worker.ts` + `src/client/pv.ts` | ページ表示の記録（本番のみ）→ Workers Analytics Engine。SQL での分析方法は docs/analytics.md |
 | `/search/` | `src/pages/search.astro` + `src/client/search.ts` | キーワード・種類・タグによる検索。`?q=` `?kind=` `?tag=` で条件を共有できる |
 | `/search-index.json` | `src/pages/search-index.json.ts` | 検索インデックス（ビルド時に生成） |
-| `/sitemap.xml` `/robots.txt` `/llms.txt` | `src/pages/*.ts` | 検索エンジン・AI 向けのサイトマップ・クロール許可・サイト案内（ビルド時に生成。404・検索は noindex で除外） |
+| `/sitemap.xml` `/robots.txt` `/llms.txt` `/llms-full.txt` `/rss.xml` | `src/pages/*.ts` | 検索エンジン・AI 向けのサイトマップ・クロール許可・サイト案内・記事全文・RSS（ビルド時に生成。404・検索は noindex で除外） |
 
 ### コンテンツとデータ
 | 置き場所 | 内容 | 追加方法 |
@@ -40,7 +40,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 ### コード構成
 - `src/worker.ts`: Worker のエントリ。`wrangler.jsonc` の `run_worker_first: ["/api/*"]` で `/api/*` だけを処理し、それ以外は静的ファイルをそのまま返す（Worker の実行回数を使わない）
 - `src/layouts/Base.astro`: 全ページ共通（head、タブ、フッター、本番だけ Web Analytics と `/api/pv` への記録）。head に canonical（常に本番 URL）・OGP・JSON-LD を出す
-- `src/lib/seo.ts`: 構造化データ（JSON-LD）の組み立てと、`<script type="application/ld+json">` に安全に埋め込むためのエスケープ（`jsonLd()`）
+- `src/lib/seo.ts`: 構造化データ（JSON-LD。トップは ProfilePage、一覧は CollectionPage、詳細は TechArticle、パンくずは BreadcrumbList）の組み立てと、`<script type="application/ld+json">` に安全に埋め込むためのエスケープ（`jsonLd()`）
 - `src/components/`: `SiteNav`（タブ）、`PageHeader`（見出し）、`PostCards`（トップのカード）、`PostList`（一覧）、`TagList`（タグ → タグ検索へのリンク）
 - `src/lib/posts.ts`: 記事とウィークリーを共通の `Post` 型で扱う（一覧・トップ・検索で共用）
 - `src/styles/global.css`: スタイルはこの1ファイル。色は `:root` の変数で、ダークモードに対応
@@ -49,7 +49,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 ### 守ること
 - **CSP**（`public/_headers`）: インラインのスクリプト・スタイルは使わない（`style="..."` も不可）。スクリプトは `src/client/` に置き、Astro に外部ファイルとして出力させる。例外は実行されない構造化データ（`type="application/ld+json"`）だけで、必ず `jsonLd()` を通して出力する
 - クライアント JS で DOM を組み立てるときは `textContent` を使い、`innerHTML` は使わない
-- コンテンツの Markdown に生の HTML・`javascript:` リンクを書かない（`scripts/security-scan.sh` が検出する）
+- コンテンツの Markdown: `javascript:` などの危険なリンクは書かない。生の HTML は **記事（articles）だけ** 許可し、`<details>` `<kbd>` `<figure>` `<a>` `<img>`（自サイトの画像）など表示用のものに限る。`<script>` `<iframe>` `<form>` `<style>` `<svg>` など、`on〜` 属性・`style` 属性は禁止（CSP でも動かない）。AI が生成する Weekly は生の HTML を一切禁止（`scripts/security-scan.sh` が検出する）
 - アクセス記録に IP・UA 全文・リファラーの URL 全体・Cookie を保存しない（docs/analytics.md）
 - 問い合わせの送信先アドレスは Apps Script のスクリプトプロパティにだけ置く。リポジトリ・Worker・ページに書かない
 

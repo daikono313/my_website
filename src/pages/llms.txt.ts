@@ -16,7 +16,7 @@ export const GET: APIRoute = async ({ site }) => {
     "",
     `> ${line(profile.summary)}`,
     "",
-    `${profile.name}（${profile.title}）の個人サイト。手書きの技術記事と、データ基盤・OSS・AI×データの動きを毎週まとめた Weekly Tech Note（AI が作成し、人が確認して公開）を載せている。`,
+    `${profile.name}（${profile.title}／${profile.titleJa}）の個人サイト。手書きの技術記事と、データ基盤・OSS・AI×データの動きを毎週まとめた Weekly Tech Note（AI が作成し、人が確認して公開）を載せている。`,
     "",
     "## Articles",
     "",
@@ -29,6 +29,8 @@ export const GET: APIRoute = async ({ site }) => {
     "## Optional",
     "",
     `- [プロフィール](${url("/")}): 経歴・スキル・GitHub での活動`,
+    `- [技術記事の全文](${url("/llms-full.txt")}): 技術記事の本文をまとめた Markdown`,
+    `- [RSS](${url("/rss.xml")}): 記事と Weekly Tech Note の更新情報`,
     `- [検索インデックス](${url("/search-index.json")}): 全記事のタイトル・説明・タグ・本文（JSON）`,
     "",
   ].join("\n");

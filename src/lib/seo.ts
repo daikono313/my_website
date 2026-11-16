@@ -1,4 +1,4 @@
-import { profile } from "../data/profile";
+import { profile, skills } from "../data/profile";
 
 // 構造化データ（JSON-LD）と SEO 用メタ情報の組み立て。
 // JSON-LD は <script type="application/ld+json"> に入れる。実行されないデータなので CSP の script-src には掛からないが、
@@ -21,14 +21,29 @@ export const personLd = (site: URL) => ({
   "@type": "Person",
   "@id": new URL("/#person", site).href,
   name: profile.name,
-  jobTitle: profile.title,
+  ...(profile.nameJa ? { alternateName: profile.nameJa } : {}),
+  jobTitle: [profile.title, profile.titleJa],
+  description: profile.summary,
+  knowsAbout: [...profile.topics, ...skills.flatMap((s) => s.items)],
   url: new URL("/", site).href,
   sameAs: profile.links.map((l) => l.href),
 });
 
-export const websiteLd = (site: URL) => ({
+const ref = (site: URL, id: string) => ({ "@id": new URL(`/#${id}`, site).href });
+
+/** トップページ: 人物のプロフィールページ */
+export const profilePageLd = (site: URL, modified?: Date) => ({
   "@context": "https://schema.org",
   "@graph": [
+    {
+      "@type": "ProfilePage",
+      url: new URL("/", site).href,
+      name: `${profile.name}｜${profile.titleJa}`,
+      inLanguage: "ja",
+      ...(modified ? { dateModified: modified.toISOString() } : {}),
+      mainEntity: ref(site, "person"),
+      isPartOf: ref(site, "website"),
+    },
     {
       "@type": "WebSite",
       "@id": new URL("/#website", site).href,
@@ -36,10 +51,46 @@ export const websiteLd = (site: URL) => ({
       url: new URL("/", site).href,
       inLanguage: "ja",
       description: profile.summary,
-      author: { "@id": new URL("/#person", site).href },
+      author: ref(site, "person"),
     },
     personLd(site),
   ],
+});
+
+/** 一覧ページ: 記事の集まり */
+export const collectionLd = (
+  site: URL,
+  c: { url: URL; name: string; description: string; items: { url: string; name: string }[] },
+) => ({
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  url: c.url.href,
+  name: c.name,
+  description: c.description,
+  inLanguage: "ja",
+  isPartOf: ref(site, "website"),
+  mainEntity: {
+    "@type": "ItemList",
+    itemListElement: c.items.map((it, i) => ({ "@type": "ListItem", position: i + 1, url: new URL(it.url, site).href, name: it.name })),
+  },
+});
+
+/** パンくず。items は上の階層から順に（最後が現在のページ） */
+export const breadcrumbLd = (site: URL, items: { name: string; path: string }[]) => ({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: items.map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.name, item: new URL(it.path, site).href })),
+});
+
+export const contactPageLd = (site: URL, url: URL, description: string) => ({
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  url: url.href,
+  name: `お問い合わせ｜${profile.name}`,
+  description,
+  inLanguage: "ja",
+  isPartOf: ref(site, "website"),
+  about: ref(site, "person"),
 });
 
 export const articleLd = (

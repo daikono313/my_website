@@ -2,13 +2,15 @@
 import Base from "../../layouts/Base.astro";
 import PageHeader from "../../components/PageHeader.astro";
 import { profile } from "../../data/profile";
+import { contactPageLd } from "../../lib/seo";
 
 // Turnstile のサイトキー（公開値。GitHub Variables の TURNSTILE_SITE_KEY からビルド時に渡す）
 // ローカル開発（npm run dev）だけテスト用キーを使う。ビルドでキーがなければフォームを出さず「準備中」と表示する
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.env.DEV ? "1x00000000000000000000AA" : "");
+const description = `${profile.name}（${profile.titleJa}）への問い合わせフォーム。データ基盤や AI エージェントに関するお仕事のご相談、記事へのご意見を受け付けています。`;
 ---
 
-<Base title={`Contact — ${profile.name}`} description="お問い合わせ" nav="contact">
+<Base title={`Contact（お問い合わせ）— ${profile.name}`} description={description} nav="contact" structuredData={[contactPageLd(Astro.site!, new URL(Astro.url.pathname, Astro.site), description)]} breadcrumb={[{ name: "Home", path: "/" }, { name: "Contact", path: "/contact/" }]}>
   <PageHeader title="Contact">
     <span>お仕事のご相談・記事へのご意見などはこちらからどうぞ</span>
   </PageHeader>
