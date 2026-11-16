@@ -10,6 +10,10 @@ const articles = defineCollection({
     description: z.string(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
+    // 以下は SEO・AIO 用（任意）。書き方は skill `seo-aio-article`
+    updated: z.coerce.date().optional(), // 内容を更新した日。表示と構造化データの dateModified に使う
+    summary: z.array(z.string()).min(1).max(5).optional(), // 冒頭に出す「この記事の要点」（プレーンテキスト）
+    faq: z.array(z.object({ q: z.string(), a: z.string() })).max(8).optional(), // 末尾の「よくある質問」と FAQPage 構造化データ（プレーンテキスト）
   }),
 });
 

@@ -1,36 +1,59 @@
 ---
-title: Claude Code の mod で、セッションのコストを入力欄の上に出す
+title: Claude Code でセッションのコストを常時表示する mod の作り方
 date: 2026-11-16
-description: Claude Code の mod「session-cost」を作り、セッションのコストを入力欄の上に常時表示した。Sonnet 以外のモデルになっているときは警告も出す。別の端末に入れる手順をまとめる。
-tags: [Claude Code, TypeScript]
+description: Claude Code の mod（プラグイン）で、セッションのコスト（USD）を入力欄の上に常に表示し、Sonnet 以外のモデルのときは警告を出す方法。4 つのファイルを置き、settings.json に 1 行足すだけで使える。コードの全文と導入手順を載せる。
+tags: [Claude Code, TypeScript, 生成AI]
+summary:
+  - Claude Code の mod「session-cost」を入れると、セッションのコスト（USD）が入力欄の上に常に表示される
+  - Sonnet 以外のモデルを使っているときは、入力欄の上の帯が警告色になり、切り替え後の最初の送信でトーストも出る
+  - 導入は、4 つのファイルを置き、settings.json の CLAUDE_CODE_PLUGIN_DIRS に mod のフォルダを指定するだけ
+faq:
+  - q: Claude Code の mod とは何ですか？
+    a: Claude Code の画面の表示や動作を、TypeScript（TSX）で書いたフックで変えられる仕組みです。プラグインの一種で、ビルドせずにそのまま読み込まれます。Claude Code 2.1.325 の時点では早期アクセス版で、API が変わる可能性があります。
+  - q: Sonnet 以外のモデルも警告の対象から外せますか？
+    a: 外せます。register.tsx の isSonnet 関数の判定を書き換えます。たとえば Haiku も許可するなら、モデル名に haiku が含まれる場合も true を返すようにします。
+  - q: 設定したのにコストが表示されないときは、何を確認すればよいですか？
+    a: 新しいセッションを開始したか、CLAUDE_CODE_PLUGIN_DIRS が mod のフォルダの絶対パスになっているか、claude plugin validate が通るかを順に確認します。それでも表示されなければ、claude --debug で起動してデバッグログにフックの失敗が出ていないかを見ます。
 ---
 
-## 課題
+Claude Code の mod（プラグイン）を使うと、セッションのコストを入力欄の上に常に表示できます。mod とは、Claude Code の画面の表示や動作を TypeScript のフックで変えられる仕組みのことです。この記事で作る mod「session-cost」は、4 つのファイルと `~/.claude/settings.json` への 1 行の追加で動き、Sonnet 以外のモデルを使っているときは警告も出します。Claude Code 2.1.325 で動作を確認しました（2026 年 11 月時点）。
+
+## 課題：コストと使用中のモデルが、作業中に見えない
 
 Claude Code を使っていて、次の 2 つに困っていました。
 
 - いまのセッションでいくら使ったかが、`/cost` で確認しないと分からない
 - 普段は Sonnet を使っているのに、気づかないうちに Opus などの高いモデルに切り替わっていることがある
 
-そこで、Claude Code の mod（プラグイン）として「session-cost」を作りました。
+どちらも、作業中に常に見えていれば防げます。そこで、Claude Code の画面に表示を足せる mod を作りました。
 
-## できること
+## できること：コストの常時表示と、モデルの警告
 
-- 入力欄の上に、セッションのコスト（USD）を常に表示する
-- Sonnet 以外のモデル（Opus・Haiku など）のときは、枠を警告色にして「Sonnet ではありません」と表示する
-- モデルが Sonnet 以外に切り替わったときは、応答が始まる前にトーストでも知らせる
+session-cost を入れると、次の 3 つができるようになります。
+
+| 機能 | 表示する場所 | タイミング |
+|---|---|---|
+| セッションのコスト（USD）を表示する | 入力欄の上の帯 | セッションの開始時と、応答が終わるたび |
+| Sonnet 以外のモデルのとき、枠を警告色にして「Sonnet ではありません」と表示する | 入力欄の上の帯 | 常時 |
+| モデルが Sonnet 以外に切り替わったことを知らせる | トースト（一時的な通知） | 切り替え後、最初にメッセージを送ったとき（モデルを呼び出す前） |
 
 Sonnet で使っているときは、次のように入力欄の上にコストだけが出ます。
 
-![入力欄の上に「$0.04 session」と表示されている](./images/session-cost-band.png)
+![Claude Code の入力欄の上に、セッションのコスト「$0.04 session」が表示されている](./images/session-cost-band.png)
 
-## 実施手順
+## 実施手順：4 つのファイルを置き、settings.json で読み込む
 
 別の端末に入れるときも、この手順で同じ状態にできます。
 
+**前提**
+
+- Claude Code 2.1.325 で確認しています。mod の API は早期アクセス版で、今後のリリースで変わる可能性があります
+- mod は TypeScript（TSX）で書きます。ビルドは不要で、Claude Code がそのまま読み込みます
+- 作業は macOS を想定しています（パスの例が `/Users/...` です）
+
 ### 1. フォルダとファイルを作る
 
-mod は 4 つのファイルでできています。
+mod は次の 4 つのファイルでできています。
 
 ```bash
 mkdir -p ~/.claude/dev-mods/session-cost/.claude-plugin ~/.claude/dev-mods/session-cost/hooks ~/.claude/dev-mods/session-cost/types
@@ -46,11 +69,15 @@ mkdir -p ~/.claude/dev-mods/session-cost/.claude-plugin ~/.claude/dev-mods/sessi
 
 #### .claude-plugin/plugin.json
 
+mod の名前・バージョン・説明と、状態の型を書いたファイルの場所を指定します。
+
 ```json
 { "name": "session-cost", "version": "0.1.0", "description": "セッションのコストを入力欄の上に出し、Sonnet 以外のモデルなら警告する", "types": "./types/index.d.ts" }
 ```
 
 #### hooks/hooks.json
+
+本体のモジュールを指定します。
 
 ```json
 { "modules": ["./register.tsx"] }
@@ -160,13 +187,15 @@ async function checkModel($: EngineInterface): Promise<void> {
 }
 ```
 
-ポイント:
+実装のポイントは次の 5 つです。
 
 - **コストは `session.measure` で受け取る**: エンジンが応答のたびに計測値を渡してくれるので、自分で `$.session.usage()` を呼び直す必要がありません
-- **モデルは `turn.start` で確認する**: 応答が終わってから確認すると、`/model` で切り替えたあとの最初の応答には、警告が出る前に高いモデルの料金がかかってしまいます。モデルを呼ぶ直前に確認すれば、少なくとも料金がかかる前に気づけます。サブエージェントのターン（`e.agentId` がある）は対象外にしています
+- **モデルは `turn.start` で確認する**: 応答が終わってから確認すると、`/model` で切り替えたあとの最初の応答には、警告が出る前に高いモデルの料金がかかってしまいます。モデルを呼ぶ直前に確認すれば、料金がかかる前に気づけます。サブエージェントのターン（`e.agentId` がある）は対象外にしています
 - **アンケートが出ているときは譲る**: 入力欄の上の帯には Claude Code のアンケートも出ます。`e.props.hasSurvey` が true のときは何も描かずに `next(e)` を返します
 - **「未取得」は `null` で表す**: `-1` や `''` のような特別な値を使うより、型で区別できるので安全です
 - **色はテーマの名前で指定する**: `'claude'` `'warning'` `'subtle'` を使っているので、ライト・ダークどちらのテーマでも読める色になります
+
+警告の対象を変えたいときは、`isSonnet` の判定を書き換えます。たとえば Haiku も許可するなら、`name.toLowerCase()` に `haiku` が含まれる場合も true を返すようにします。
 
 ### 2. ~/.claude/settings.json を編集する
 
@@ -190,7 +219,7 @@ async function checkModel($: EngineInterface): Promise<void> {
 python3 -c "import json; d=json.load(open('$HOME/.claude/settings.json')); print('OK', d.get('model'), d['env'].get('CLAUDE_CODE_PLUGIN_DIRS'))"
 ```
 
-### 3. 検証する
+### 3. claude plugin validate で検証する
 
 ```bash
 claude plugin validate ~/.claude/dev-mods/session-cost
@@ -198,10 +227,23 @@ claude plugin validate ~/.claude/dev-mods/session-cost
 
 「Validation passed」と出れば成功です。README・LICENSE・アイコンがないといった警告は、プラグインのディレクトリに公開するときに必要なもので、ローカルで使うだけなら無視して構いません。
 
-### 4. 反映を確認する
+### 4. 新しいセッションで表示を確認する
 
 設定は、新しく開始したセッションから反映されます。新しいセッションで、入力欄の上に「$x.xx session」が出ていれば完了です。Sonnet 以外のモデルに切り替えると、次に送信したときにトーストが出て、枠が警告色になり、モデル名と「Sonnet ではありません」が表示されます。
 
+表示されないときは、次の順に確認します。
+
+1. 設定を書いたあとに、新しいセッションを開始したか（実行中のセッションには反映されません）
+2. `CLAUDE_CODE_PLUGIN_DIRS` が、mod のフォルダを指す絶対パスになっているか（`~` は使わない）
+3. `claude plugin validate` がエラーなく通るか
+4. `claude --debug` で起動し、デバッグログに mod のフックの失敗が出ていないか
+
 ## 終わりに
 
-コストが常に目に入るだけで、「この調べものに Opus は要らないな」と判断しやすくなりました。mod は TSX で入力欄まわりの表示を差し替えられるので、ほかにも作業中に見ておきたい情報があれば、同じ形で足していけそうです。
+コストが常に目に入るだけで、「この調べものに Opus は要らないな」と判断しやすくなりました。mod は TSX で入力欄まわりの表示を差し替えられるので、作業中に見ておきたい情報があれば、同じ形で足していけます。
+
+この記事のポイントをまとめます。
+
+- Claude Code の mod は、`ui.render` で入力欄の上の帯（`AbovePrompt`）に任意の表示を足せる
+- セッションのコストは `session.measure` イベントで、応答のたびに受け取れる
+- モデルの確認は `turn.start` で行うと、料金がかかる前に警告できる

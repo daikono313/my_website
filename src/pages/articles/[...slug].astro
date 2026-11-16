@@ -4,6 +4,7 @@ import PageHeader from "../../components/PageHeader.astro";
 import TagList from "../../components/TagList.astro";
 import { profile } from "../../data/profile";
 import { getArticles, fmtDate, type ArticleEntry } from "../../lib/posts";
+import { articleLd, faqLd } from "../../lib/seo";
 import { render } from "astro:content";
 
 export async function getStaticPaths() {
@@ -13,14 +14,58 @@ export async function getStaticPaths() {
 
 const { article } = Astro.props as { article: ArticleEntry };
 const { Content } = await render(article);
+const d = article.data;
+
+const structuredData: object[] = [
+  articleLd(Astro.site!, {
+    url: new URL(Astro.url.pathname, Astro.site),
+    title: d.title,
+    description: d.description,
+    published: d.date,
+    modified: d.updated,
+    tags: d.tags,
+  }),
+];
+if (d.faq?.length) structuredData.push(faqLd(d.faq));
 ---
 
-<Base title={`${article.data.title} — ${profile.name}`} description={article.data.description} nav="articles">
-  <PageHeader title={article.data.title}>
-    <time datetime={article.data.date.toISOString()}>{fmtDate(article.data.date)}</time>
-    <TagList tags={article.data.tags} />
+<Base
+  title={`${d.title} — ${profile.name}`}
+  description={d.description}
+  nav="articles"
+  type="article"
+  published={d.date}
+  modified={d.updated}
+  structuredData={structuredData}
+>
+  <PageHeader title={d.title}>
+    <span>
+      公開 <time datetime={d.date.toISOString()}>{fmtDate(d.date)}</time>
+      {d.updated && <>{" · 更新 "}<time datetime={d.updated.toISOString()}>{fmtDate(d.updated)}</time></>}
+      {" · "}<a href="/">{profile.name}</a>
+    </span>
+    <TagList tags={d.tags} />
   </PageHeader>
+  {d.summary && (
+    <aside class="highlights-box" aria-label="この記事の要点">
+      <h2>この記事の要点</h2>
+      <ul class="highlights">{d.summary.map((s) => <li>{s}</li>)}</ul>
+    </aside>
+  )}
   <article class="prose">
     <Content />
+    {d.faq && d.faq.length > 0 && (
+      <section class="faq" aria-labelledby="faq">
+        <h2 id="faq">よくある質問</h2>
+        <dl>
+          {d.faq.map((f) => (
+            <>
+              <dt>{f.q}</dt>
+              <dd>{f.a}</dd>
+            </>
+          ))}
+        </dl>
+      </section>
+    )}
   </article>
 </Base>

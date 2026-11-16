@@ -4,6 +4,7 @@ import { profile, skills, featuredRepos } from "../data/profile";
 import { getRepos, getStats } from "../lib/github";
 import PostCards from "../components/PostCards.astro";
 import { getPosts, fmtDate } from "../lib/posts";
+import { websiteLd } from "../lib/seo";
 
 const user = profile.githubUser;
 const [allRepos, stats, articles, weeklies] = await Promise.all([
@@ -28,7 +29,7 @@ const recentTotal = recentWeeks.flat().reduce((n, d) => n + d.count, 0);
 const avg = (n: number) => n.toFixed(1);
 ---
 
-<Base title={`${profile.name} — ${profile.title}`} nav="home">
+<Base title={`${profile.name} — ${profile.title}`} nav="home" structuredData={[websiteLd(Astro.site!)]}>
   <header class="hero">
     <h1>
       {profile.name}

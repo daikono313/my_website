@@ -3,13 +3,26 @@ import "../styles/global.css";
 import { profile } from "../data/profile";
 import SiteNav from "../components/SiteNav.astro";
 import type { NavKey } from "../lib/nav";
+import { jsonLd } from "../lib/seo";
 
 interface Props {
   title: string;
   description?: string;
   nav?: NavKey;
+  /** OGP の og:type。記事・ウィークリーの詳細は "article" */
+  type?: "website" | "article";
+  published?: Date;
+  modified?: Date;
+  /** 検索結果に出さないページ（404・検索結果など） */
+  noindex?: boolean;
+  /** 構造化データ（JSON-LD）。src/lib/seo.ts で組み立てたものを渡す */
+  structuredData?: object[];
 }
-const { title, description = profile.summary, nav } = Astro.props;
+const { title, description = profile.summary, nav, type = "website", published, modified, noindex = false, structuredData = [] } = Astro.props;
+
+// canonical は常に本番の URL（astro.config.mjs の site）を指す。Preview の URL が検索結果に重複して出ないようにする
+const site = Astro.site ?? new URL(Astro.url.origin);
+const canonical = new URL(Astro.url.pathname, site).href;
 
 // Cloudflare Web Analytics。本番デプロイ時だけ token を渡す（Preview・ローカルでは計測しない）
 // 値を HTML 属性に埋め込むため、想定形式（32桁の16進数）以外は無視する
@@ -25,8 +38,20 @@ const beacon = /^[0-9a-f]{32}$/.test(analyticsToken ?? "") ? JSON.stringify({ to
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={profile.name} />
+    <meta property="og:locale" content="ja_JP" />
+    <meta name="twitter:card" content="summary" />
+    {published && <meta property="article:published_time" content={published.toISOString()} />}
+    {modified && <meta property="article:modified_time" content={modified.toISOString()} />}
+    <meta name="author" content={profile.name} />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    {structuredData.map((d) => <script is:inline type="application/ld+json" set:html={jsonLd(d as never)} />)}
     {beacon && <script is:inline type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={beacon}></script>}
   </head>
   <body>

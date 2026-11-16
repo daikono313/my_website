@@ -26,7 +26,8 @@ rm -f /tmp/npm-audit.$$
 # 4. 配信物
 if [ -d dist ]; then
   [ -z "$(find dist -name '*.map' -o -name '.env*' -o -name '*.pem')" ] && ok "dist: no sourcemap/secret files" || ng "dist: sourcemap/secret files"
-  grep -rqE '<script(\s[^>]*)?>[^<]' dist --include='*.html' && ng "dist: inline script (CSP違反)" || ok "dist: no inline script"
+  # 構造化データ（type="application/ld+json"）は実行されないデータなので除外する。中身は src/lib/seo.ts の jsonLd() でエスケープ済み
+  grep -rhoE '<script(\s[^>]*)?>[^<]' dist --include='*.html' | grep -vqE '^<script type="application/ld\+json">' && ng "dist: inline script (CSP違反)" || ok "dist: no inline script"
   [ -f dist/_headers ] && grep -q 'Content-Security-Policy' dist/_headers && ok "dist: security headers" || ng "dist: security headers (_headers)"
   grep -qE "unsafe-(inline|eval)|script-src[^;]*\*" dist/_headers 2>/dev/null && ng "CSP: unsafe-inline/unsafe-eval/ワイルドカード" || ok "CSP: no unsafe-inline/eval/wildcard"
 else
