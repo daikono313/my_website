@@ -5,9 +5,14 @@ description: Claude Code の mod「session-cost」を作り、セッションの
 tags: [Claude Code, TypeScript]
 ---
 
-Claude Code を使っていると、いまのセッションでいくら使ったかが気になります。また、普段は Sonnet を使っているのに、気づかないうちに Opus などの高いモデルに切り替わっていることがあります。
+## 課題
 
-そこで、Claude Code の mod（プラグイン）として「session-cost」を作りました。この記事では、その中身と、別の端末に入れる手順をまとめます。
+Claude Code を使っていて、次の 2 つに困っていました。
+
+- いまのセッションでいくら使ったかが、`/cost` で確認しないと分からない
+- 普段は Sonnet を使っているのに、気づかないうちに Opus などの高いモデルに切り替わっていることがある
+
+そこで、Claude Code の mod（プラグイン）として「session-cost」を作りました。
 
 ## できること
 
@@ -19,7 +24,11 @@ Sonnet で使っているときは、次のように入力欄の上にコスト�
 
 ![入力欄の上に「$0.04 session」と表示されている](./images/session-cost-band.png)
 
-## 1. フォルダとファイルを作る
+## 実施手順
+
+別の端末に入れるときも、この手順で同じ状態にできます。
+
+### 1. フォルダとファイルを作る
 
 mod は 4 つのファイルでできています。
 
@@ -35,19 +44,19 @@ mkdir -p ~/.claude/dev-mods/session-cost/.claude-plugin ~/.claude/dev-mods/sessi
 └── types/index.d.ts             … mod が保存する状態の型
 ```
 
-### .claude-plugin/plugin.json
+#### .claude-plugin/plugin.json
 
 ```json
 { "name": "session-cost", "version": "0.1.0", "description": "セッションのコストを入力欄の上に出し、Sonnet 以外のモデルなら警告する", "types": "./types/index.d.ts" }
 ```
 
-### hooks/hooks.json
+#### hooks/hooks.json
 
 ```json
 { "modules": ["./register.tsx"] }
 ```
 
-### types/index.d.ts
+#### types/index.d.ts
 
 mod が保存する状態（コストとモデル名）の型を宣言します。まだ取得していないことは `null` で表します。
 
@@ -59,7 +68,7 @@ declare module 'claude-code' {
 }
 ```
 
-### hooks/register.tsx
+#### hooks/register.tsx
 
 本体です。4 つのイベントにフックしています。
 
@@ -159,7 +168,7 @@ async function checkModel($: EngineInterface): Promise<void> {
 - **「未取得」は `null` で表す**: `-1` や `''` のような特別な値を使うより、型で区別できるので安全です
 - **色はテーマの名前で指定する**: `'claude'` `'warning'` `'subtle'` を使っているので、ライト・ダークどちらのテーマでも読める色になります
 
-## 2. ~/.claude/settings.json を編集する
+### 2. ~/.claude/settings.json を編集する
 
 既存の項目は消さずに、次の 2 点を追加・変更します。
 
@@ -181,7 +190,7 @@ async function checkModel($: EngineInterface): Promise<void> {
 python3 -c "import json; d=json.load(open('$HOME/.claude/settings.json')); print('OK', d.get('model'), d['env'].get('CLAUDE_CODE_PLUGIN_DIRS'))"
 ```
 
-## 3. 検証する
+### 3. 検証する
 
 ```bash
 claude plugin validate ~/.claude/dev-mods/session-cost
@@ -189,10 +198,10 @@ claude plugin validate ~/.claude/dev-mods/session-cost
 
 「Validation passed」と出れば成功です。README・LICENSE・アイコンがないといった警告は、プラグインのディレクトリに公開するときに必要なもので、ローカルで使うだけなら無視して構いません。
 
-## 4. 反映を確認する
+### 4. 反映を確認する
 
 設定は、新しく開始したセッションから反映されます。新しいセッションで、入力欄の上に「$x.xx session」が出ていれば完了です。Sonnet 以外のモデルに切り替えると、次に送信したときにトーストが出て、枠が警告色になり、モデル名と「Sonnet ではありません」が表示されます。
 
-## おわりに
+## 終わりに
 
 コストが常に目に入るだけで、「この調べものに Opus は要らないな」と判断しやすくなりました。mod は TSX で入力欄まわりの表示を差し替えられるので、ほかにも作業中に見ておきたい情報があれば、同じ形で足していけそうです。
