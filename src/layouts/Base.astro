@@ -3,7 +3,7 @@ import "../styles/global.css";
 import { profile } from "../data/profile";
 import SiteNav from "../components/SiteNav.astro";
 import type { NavKey } from "../lib/nav";
-import { jsonLd } from "../lib/seo";
+import { jsonLd, breadcrumbLd } from "../lib/seo";
 
 interface Props {
   title: string;
@@ -17,12 +17,15 @@ interface Props {
   noindex?: boolean;
   /** 構造化データ（JSON-LD）。src/lib/seo.ts で組み立てたものを渡す */
   structuredData?: object[];
+  /** パンくず。Home から現在のページまで。画面に表示し、BreadcrumbList の構造化データにもする */
+  breadcrumb?: { name: string; path: string }[];
 }
-const { title, description = profile.summary, nav, type = "website", published, modified, noindex = false, structuredData = [] } = Astro.props;
+const { title, description = profile.summary, nav, type = "website", published, modified, noindex = false, structuredData = [], breadcrumb } = Astro.props;
 
 // canonical は常に本番の URL（astro.config.mjs の site）を指す。Preview の URL が検索結果に重複して出ないようにする
 const site = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(Astro.url.pathname, site).href;
+const ld = breadcrumb ? [...structuredData, breadcrumbLd(site, breadcrumb)] : structuredData;
 
 // Cloudflare Web Analytics。本番デプロイ時だけ token を渡す（Preview・ローカルでは計測しない）
 // 値を HTML 属性に埋め込むため、想定形式（32桁の16進数）以外は無視する
@@ -51,12 +54,22 @@ const beacon = /^[0-9a-f]{32}$/.test(analyticsToken ?? "") ? JSON.stringify({ to
     {modified && <meta property="article:modified_time" content={modified.toISOString()} />}
     <meta name="author" content={profile.name} />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
-    {structuredData.map((d) => <script is:inline type="application/ld+json" set:html={jsonLd(d as never)} />)}
+    <link rel="alternate" type="application/rss+xml" title={`${profile.name} の記事と Weekly Tech Note`} href="/rss.xml" />
+    {ld.map((d) => <script is:inline type="application/ld+json" set:html={jsonLd(d as never)} />)}
     {beacon && <script is:inline type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={beacon}></script>}
   </head>
   <body>
     <div class="container">
       <SiteNav current={nav} />
+      {breadcrumb && (
+        <nav class="breadcrumb" aria-label="パンくずリスト">
+          <ol>
+            {breadcrumb.map((b, i) =>
+              i === breadcrumb.length - 1 ? <li aria-current="page">{b.name}</li> : <li><a href={b.path}>{b.name}</a></li>,
+            )}
+          </ol>
+        </nav>
+      )}
       <slot />
       <footer>
         <div>© {new Date().getFullYear()} {profile.name}</div>

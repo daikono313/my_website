@@ -37,6 +37,7 @@ if (d.faq?.length) structuredData.push(faqLd(d.faq));
   published={d.date}
   modified={d.updated}
   structuredData={structuredData}
+  breadcrumb={[{ name: "Home", path: "/" }, { name: "Articles", path: "/articles/" }, { name: d.title, path: Astro.url.pathname }]}
 >
   <PageHeader title={d.title}>
     <span>

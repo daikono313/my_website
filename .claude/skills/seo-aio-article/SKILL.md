@@ -7,7 +7,7 @@ description: 技術記事（src/content/articles/*.md）を、検索エンジン
 
 検索エンジンは「どの検索語に答えるページか」を、AI は「どの一文をそのまま引用できるか」を見ている。どちらにも効くのは、**問いに対する答えを、具体的に、一文ずつ自立した形で、構造化して書く**こと。この skill はその手順とチェックリスト。
 
-サイト側の仕組み（canonical・OGP・JSON-LD・サイトマップ・`robots.txt`・`llms.txt`）はテンプレートが自動で出すので、記事では **frontmatter と本文** だけに集中する。
+サイト側の仕組み（canonical・OGP・JSON-LD・パンくず・サイトマップ・RSS・`robots.txt`・`llms.txt`・`llms-full.txt`）はテンプレートが自動で出すので、記事では **frontmatter と本文** だけに集中する。トップや一覧ページの文言を変えるときも、同じ考え方（タイトルの前半に主キーワード、description の 1 文目で答え、構造化データと食い違わない）で書く。
 
 ## 0. 書く前に決める
 
@@ -65,7 +65,11 @@ faq:                      # 任意。本文で答えている質問だけ。末�
 
 ## 5. 守ること（サイトのルール）
 
-- 本文に生の HTML・`javascript:` リンクを書かない（`scripts/security-scan.sh` が検出する）
+- `javascript:` などの危険なリンクを書かない
+- 生の HTML は書いてよい（記事のみ）。ただし表示用に限る: `<details>`/`<summary>`（補足の折りたたみ）、`<kbd>`、`<figure>`/`<figcaption>`、`<mark>`、`<a>`、`<img>`（自サイトの画像。CSP で外部画像は表示されない）など
+- 禁止: `<script>` `<iframe>` `<form>` `<style>` `<svg>` `<object>` `<embed>` `<meta>` `<link>` などの要素、`on〜` `style` `srcdoc` 属性、HTML 内の `javascript:`/`data:` URL（`scripts/security-scan.sh` が検出する。CSP でも動かない）
+- 生の HTML の中は Markdown として解釈されないことがある。Markdown を書くときは、HTML のタグの前後に空行を入れる
+- 構造（見出し・表・リスト）は HTML ではなく Markdown で書く。AI や検索エンジンが読み取りやすく、`llms-full.txt` にもそのまま載る
 - ユーザーの個人情報（メールアドレス・ローカルのパスなど）を書かない
 - ユーザーの体験談・感想を Claude が補ったときは、PR や返答でその箇所を伝えて確認してもらう
 

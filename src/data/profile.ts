@@ -5,6 +5,9 @@ export const profile = {
   name: "Daisuke Harato",
   nameJa: "", // TODO: 漢字表記（空なら非表示）
   title: "Data Engineer", // TODO
+  titleJa: "データエンジニア", // 検索結果のタイトル・構造化データに使う
+  // サイトで扱っている分野（トップのタイトル・description と構造化データの knowsAbout に使う）
+  topics: ["データ基盤", "AI エージェント", "データエンジニアリング"],
   githubUser: "daikono313",
   summary:
     "データ基盤の設計・構築・運用を専門とするエンジニア。最近は AI エージェントによるデータ基盤の自律構築・運用に取り組んでいます。", // TODO

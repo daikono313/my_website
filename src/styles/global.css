@@ -230,3 +230,13 @@ footer { padding: 40px 0 60px; border-top: 1px solid var(--border); font-family:
 .faq dt { font-weight: 600; margin: 20px 0 6px; }
 .faq dt::before { content: "Q. "; color: var(--accent); }
 .faq dd { margin: 0 0 0 1.6em; }
+
+/* パンくずリスト（Base.astro の breadcrumb） */
+.breadcrumb { margin-top: 20px; font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+.breadcrumb ol { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.breadcrumb li { overflow-wrap: anywhere; }
+.breadcrumb li + li::before { content: "/"; margin-right: 4px; color: var(--border); }
+.breadcrumb a { color: var(--muted); }
+.breadcrumb [aria-current="page"] { color: var(--text); }
+/* トップの肩書き */
+.hero .role { margin: 4px 0 0; font-family: var(--mono); color: var(--muted); }
