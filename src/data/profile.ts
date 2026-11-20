@@ -21,8 +21,8 @@ export const profile = {
 
 export const skills: { category: string; items: string[] }[] = [
   // TODO: 実際のスキルに置き換え
-  { category: "Languages", items: ["Python", "SQL", "TypeScript"] },
-  { category: "Data", items: ["Snowflake", "dbt", "BigQuery", "Airflow"] },
+  { category: "Languages", items: ["Python", "SQL", "TypeScript", "Java"] },
+  { category: "Data", items: ["Snowflake", "Databricks", "dbt", "BigQuery", "Airflow", "Dagster"] },
   { category: "Cloud / Infra", items: ["AWS", "GCP", "Terraform", "Docker"] },
   { category: "AI", items: ["LLM Agents", "Claude"] },
 ];
