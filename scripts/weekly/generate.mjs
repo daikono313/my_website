@@ -9,8 +9,9 @@
 // - ID の取り違えに備えて title も書き写させ、収集した title と一致しない参照は捨てる（要約とリンク先の食い違いを防ぐ）
 // - AI の出力文字列は safeText で HTML・リンク・強調記法を無効化してから埋め込む
 // - 収集した本文は信頼しないデータとして区切って渡し、中の指示に従わないよう指示する
+// - リリースのステータス（GA / Public Preview など）と OSS のリリース種別は、AI に判断させずスクリプトが原文の表記から決める
 import { readFileSync } from "node:fs";
-import { mmdd, safeText, plainLine } from "./lib.mjs";
+import { mmdd, safeText, plainLine, truncate, STATUS_ORDER, statusOf, releaseKind } from "./lib.mjs";
 
 const MODEL = "@cf/openai/gpt-oss-120b";
 const MAX_INPUT_CHARS = 120_000; // 無料枠（1日 10,000 Neurons）に十分収まる上限
@@ -33,23 +34,19 @@ const SYSTEM = `あなたはデータ基盤エンジニア向けの週刊テッ�
 - summary・why は、同じオブジェクトに書いた id の項目の内容だけで書いてください。text が空の項目は title だけを根拠にしてください。
 - 出力は日本語で、指定の JSON オブジェクトだけを返してください（前後に説明やコードブロックを付けない）。
 - 文中で HTML タグ、Markdown のリンク・強調記法を使わないでください。
-- ステータス（GA / Preview / Beta など）・日付・数値は、項目の title / text に書かれている場合だけ使ってください。書かれていなければ status は "その他" にしてください。
-- highlights・actions・trends も、選んだ項目の内容だけを根拠にしてください。
-
-影響度の基準:
-- "red": 破壊的変更・非推奨化と廃止日・セキュリティ修正・期限付きの移行
-- "yellow": 新しい GA 機能で既存の構成やコストを改善できる可能性があるもの
-- "green": Preview・小さな改善・知っておけば十分なもの`;
+- 日付・数値は、項目の title / text に書かれている場合だけ使ってください。
+- highlights・actions・trends も、選んだ項目の内容だけを根拠にしてください。`;
 
 const SCHEMA = `{
   "description": "今週を1〜2文で要約（120字以内）",
   "highlights": ["今週の注目ポイント。何が起きたか — なぜ重要か（各80字以内）。ちょうど3件"],
-  "actions": [{ "impact": "red|yellow", "text": "読者がやるべきこと（40字以内）", "reason": "理由・期限（60字以内）", "refs": [{ "id": "根拠の項目id", "title": "その項目の title" }] }],
+  "actions": [{ "text": "読者がやるべきこと（40字以内）", "reason": "理由・期限（60字以内）", "refs": [{ "id": "根拠の項目id", "title": "その項目の title" }] }],
   "trends": [{ "label": "トレンドの見出し（15字以内）", "text": "複数ベンダー・OSS の動きを結び付けた要点と、読者への示唆（100字以内）" }],
-  "platform": [{ "id": "項目id", "title": "その項目の title", "impact": "red|yellow|green", "status": "GA|Preview|Beta|Deprecated|変更|その他", "summary": "何が変わるか → 誰にどう効くか（80字以内）" }],
-  "oss": [{ "id": "項目id", "title": "その項目の title", "impact": "red|yellow|green", "summary": "主な変更と注意点（80字以内）" }],
+  "platform": [{ "id": "項目id", "title": "その項目の title", "summary": "何が変わるか → 誰にどう効くか（80字以内）" }],
+  "oss": [{ "id": "項目id", "title": "その項目の title", "summary": "主な変更と注意点（80字以内）" }],
   "ai": [{ "id": "項目id", "title": "その項目の title", "summary": "AI×データ基盤の観点での意味（80字以内）" }],
-  "reading": [{ "id": "blog の項目id", "title": "その項目の title", "why": "この記事から得られること（60字以内）" }],
+  "reading_global": [{ "id": "region=global の blog の項目id", "title": "その項目の title", "why": "この記事から得られること（60字以内）" }],
+  "reading_ja": [{ "id": "region=ja の blog の項目id", "title": "その項目の title", "why": "この記事から得られること（60字以内）" }],
   "tags": ["本文に登場する主な製品・OSS 名（最大8件）"]
 }
 
@@ -58,19 +55,28 @@ const SCHEMA = `{
   - source ごとに最低1件は選ぶ（ai に回したものも数える）。件数の多い source だけで枠を埋めない。
   - ベンダーの製品発表ブログ（例: Google Cloud Data Analytics）はリリースノートと同等に扱う。
 - oss: category=oss の項目すべて（pre-release はその旨を summary に書く）。
-- ai: AI エージェント・LLM・MCP・セマンティックレイヤーなど AI×データの項目を最大6件（platform と重複させない）。category=platform の公式発表を優先し、blog は補完に使う。
-- reading: category=blog から、実務上の学びがある記事（設計判断・運用知見・移行事例・性能/コスト検証）を3〜5件。宣伝・入門の焼き直しは除外。
-- actions: red を優先して最大5件。該当がなければ空配列。
+- ai: AI エージェント・LLM・MCP・セマンティックレイヤーなど AI×データの項目を最大6件（platform と重複させない）。一次情報を優先する: category=platform の公式発表 → region=global の公式ブログ・企業の技術ブログ → region=ja の記事の順。
+- reading_global: category=blog かつ region=global から3件。製品・OSS の公式ブログ（設計・内部構造・性能検証・移行手順）と、企業の技術ブログの事例は一次情報として価値が高いので積極的に選ぶ。イベント告知・顧客ロゴの紹介・キャンペーンだけの記事は除外。
+- reading_ja: category=blog かつ region=ja から2件。実務上の学びがある記事（設計判断・運用知見・移行事例・性能/コスト検証）を選ぶ。入門の焼き直しは除外。
+- actions: 緊急度の高い順（破壊的変更・廃止日・セキュリティ修正・期限付きの移行 → 既存構成やコストを改善できる GA 機能）に最大5件。該当がなければ空配列。
 - trends: 2〜3件。個々のリリースの言い換えにせず、複数の動きをまとめた流れを書く。`;
 
+// 区分ごとの入力の枠（MAX_INPUT_CHARS に対する割合）。枠を超える区分は本文を均等に短くする
+// （以前は先頭から詰めていたため、並び順が最後の platform が切り捨てられることがあった）
+const SHARE = { platform: 0.4, oss: 0.15, ai: 0.05, "blog:global": 0.25, "blog:ja": 0.15 };
 function buildInput() {
-  let used = 0;
+  const key = (it) => (it.category === "blog" ? `blog:${it.region ?? "ja"}` : it.category);
+  const line = (it, text) =>
+    JSON.stringify({ id: it.id, category: it.category, ...(it.region ? { region: it.region } : {}), source: it.source, date: mmdd(new Date(it.date)), title: it.title, text });
   const lines = [];
-  for (const it of items) {
-    const line = JSON.stringify({ id: it.id, category: it.category, source: it.source, date: mmdd(new Date(it.date)), title: it.title, text: it.text });
-    if (used + line.length > MAX_INPUT_CHARS) break;
-    used += line.length;
-    lines.push(line);
+  for (const [k, group] of Map.groupBy(items, key)) {
+    const budget = MAX_INPUT_CHARS * (SHARE[k] ?? 0.05);
+    const full = group.reduce((n, it) => n + line(it, it.text).length, 0);
+    const overhead = group.reduce((n, it) => n + line(it, "").length, 0);
+    // 枠に収まらなければ、本文の長さを同じ比率で縮める（タイトルなどの見出し情報は残す）
+    const ratio = full <= budget ? 1 : Math.max(0, (budget - overhead) / Math.max(1, full - overhead));
+    if (ratio < 1) console.error(`input: ${k} は ${full} 字 → 本文を ${Math.round(ratio * 100)}% に短縮`);
+    for (const it of group) lines.push(line(it, ratio < 1 ? truncate(it.text, Math.floor(it.text.length * ratio)) : it.text));
   }
   return `対象週: ${weekStart}〜${weekEnd}\n\n<items>\n${lines.join("\n")}\n</items>\n\n次の JSON スキーマで出力してください:\n${SCHEMA}`;
 }
@@ -112,8 +118,6 @@ for (let attempt = 1; !out; attempt++) {
 }
 
 // ---- 検証と描画（リンクは収集した項目の URL だけを使う） ----
-const IMPACT = { red: "🔴", yellow: "🟡", green: "🟢" };
-const imp = (x) => IMPACT[x] ?? "🟢";
 // AI は id を隣の項目と取り違えることがある（要約とリンク先が食い違う）ので、書き写させた title と照合する。
 // 食い違えば title から項目を探し直し、見つからなければ捨てる
 const norm = (s) => String(s ?? "").normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
@@ -162,7 +166,7 @@ const actions = (Array.isArray(out.actions) ? out.actions : [])
 if (actions.length === 0) md.push("- 今週は対応が必要な変更はありません");
 for (const a of actions) {
   const refs = a.refs.map(({ id }) => `[出典](${byId.get(id).url})`);
-  md.push(`- ${imp(a.impact)} **${safeText(a.text)}** — ${safeText(a.reason)}（${refs.join(" / ")}）`);
+  md.push(`- **${safeText(a.text)}** — ${safeText(a.reason)}（${refs.join(" / ")}）`);
 }
 md.push("");
 
@@ -175,6 +179,11 @@ for (const t of (Array.isArray(out.trends) ? out.trends : []).slice(0, 3)) {
 md.push("");
 
 md.push("## リリースノート（製品別）");
+md.push(
+  "",
+  "ステータスは各リリースノートの表記からスクリプトが判定しています（AI は判定していません）。「Preview」とだけ書かれたものは Public Preview、「will soon」などの予告は「今後の変更」、表記がないものは「記載なし」です。",
+  "",
+);
 const platform = pick(out.platform, ["platform"]);
 const ai = pick(out.ai);
 // 安全網: AI が1件も選ばなかった platform の収集元は、新しい順に最大3件をタイトルとリンクだけで載せる（件数の多い収集元に枠を取られて公式発表が消えるのを防ぐ）
@@ -185,28 +194,32 @@ const missed = Map.groupBy(
   (it) => it.source,
 );
 for (const [source, its] of missed) {
-  for (const it of its.slice(0, MISSED_PER_SOURCE)) platform.push({ id: it.id, impact: "green", status: "その他", summary: "", fallback: true });
+  for (const it of its.slice(0, MISSED_PER_SOURCE)) platform.push({ id: it.id, summary: "", fallback: true });
   console.error(`coverage: ${source} は AI が選ばなかったため ${Math.min(its.length, MISSED_PER_SOURCE)} 件を見出しのみで追加`);
 }
 const bySource = Map.groupBy(platform, (x) => byId.get(x.id).source);
 for (const [source, xs] of bySource) {
-  md.push(`### ${source}`);
-  for (const x of xs) {
-    const it = byId.get(x.id);
-    const summary = x.fallback ? "（AI 要約なし）" : safeText(x.summary);
-    md.push(`- ${imp(x.impact)} \`${safeText(x.status || "その他").replace(/\\/g, "")}\` ${link(it)}（${mmdd(new Date(it.date))}）: ${summary}`);
+  md.push(`### ${source}`, "");
+  const byStatus = Map.groupBy(xs, (x) => statusOf(byId.get(x.id)));
+  for (const status of STATUS_ORDER.filter((st) => byStatus.has(st))) {
+    md.push(`#### ${status}（${byStatus.get(status).length}件）`, "");
+    for (const x of byStatus.get(status)) {
+      const it = byId.get(x.id);
+      const summary = x.fallback ? "（AI 要約なし）" : safeText(x.summary);
+      md.push(`- ${link(it)}（${mmdd(new Date(it.date))}）: ${summary}`);
+    }
+    md.push("");
   }
-  md.push("");
 }
 if (platform.length === 0) md.push("今週は該当なし", "");
 
 md.push("## OSS リリース");
 const oss = pick(out.oss, ["oss"]);
 if (oss.length) {
-  md.push("| プロジェクト | 公開日 | 主な変更 | 影響 |", "|---|---|---|---|");
+  md.push("| プロジェクト | 種別 | 公開日 | 主な変更 |", "|---|---|---|---|");
   for (const x of oss) {
     const it = byId.get(x.id);
-    md.push(`| ${link(it)} | ${mmdd(new Date(it.date))} | ${safeText(x.summary)} | ${imp(x.impact)} |`);
+    md.push(`| ${link(it)} | ${releaseKind(it.title)} | ${mmdd(new Date(it.date))} | ${safeText(x.summary)} |`);
   }
 } else md.push("今週は該当なし");
 md.push("");
@@ -220,14 +233,21 @@ for (const x of ai) {
 md.push("");
 
 md.push("## Pickup 記事");
-// AI × データで紹介した記事は Pickup に重ねない
+// AI × データで紹介した記事は Pickup に重ねない。海外（公式ブログ・企業の事例）と国内で枠を分ける
 const shownInAi = new Set(ai.map((x) => x.id));
-const reading = pick(out.reading, ["blog"]).filter((x) => !shownInAi.has(x.id)).slice(0, 5);
-if (reading.length === 0) md.push("今週は該当なし");
-reading.forEach((x, i) => {
-  const it = byId.get(x.id);
-  md.push(`${i + 1}. **${link(it)}**（${safeText(it.source)}）— ${safeText(x.why)}`);
-});
+const reading = (arr, region, n) =>
+  pick(arr, ["blog"]).filter((x) => byId.get(x.id).region === region && !shownInAi.has(x.id)).slice(0, n);
+for (const [label, xs] of [
+  ["海外", reading(out.reading_global, "global", 3)],
+  ["国内", reading(out.reading_ja, "ja", 2)],
+]) {
+  md.push("", `### ${label}`, "");
+  if (xs.length === 0) md.push("今週は該当なし");
+  xs.forEach((x, i) => {
+    const it = byId.get(x.id);
+    md.push(`${i + 1}. **${link(it)}**（${safeText(it.source)}）— ${safeText(x.why)}`);
+  });
+}
 md.push("");
 
 process.stdout.write(md.join("\n"));

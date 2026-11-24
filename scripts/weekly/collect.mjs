@@ -28,11 +28,43 @@ const cleanSnowflakeTitle = (t) =>
     .replace(/\s+\)/g, ")")
     .trim();
 
+// 記事ページから本文の冒頭を取る（海外ブログのフィードは要約が短く、AI が中身を判断できないため）
+// 説明文（og:description / description）と、<article>（なければ <main>）内の段落をつなげる。取れなければ空
+async function articleText(url) {
+  try {
+    const page = await get(url, "text/html");
+    const meta = (name) =>
+      decode(page.match(new RegExp(`<meta[^>]+(?:name|property)="${name}"[^>]+content="([^"]*)"`, "i"))?.[1] ?? "");
+    const desc = meta("og:description") || meta("description");
+    const scope = page.match(/<article[^>]*>([\s\S]*?)<\/article>/i)?.[1] ?? page.match(/<main[^>]*>([\s\S]*?)<\/main>/i)?.[1] ?? "";
+    const paras = [...scope.replace(/<(script|style|nav|figure|aside)[\s\S]*?<\/\1>/gi, " ").matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
+      .map((m) => stripHtml(m[1]))
+      .filter((t) => t.length > 40);
+    return [desc, ...paras].filter(Boolean).join(" ");
+  } catch {
+    return "";
+  }
+}
+
+const ENRICH_BELOW = 800; // フィードの本文がこれより短い海外ブログは、記事ページから補う
+
 const collectors = {
   async feed(src) {
-    return parseFeed(await get(src.url))
+    const urls = src.urls ?? [src.url];
+    const entries = (await Promise.all(urls.map(async (u) => parseFeed(await get(u))))).flat();
+    const found = entries
       .filter((e) => e.date && inWeek(e.date, week))
       .filter((e) => !src.include || src.include.test(`${e.title} ${e.text}`));
+    if (src.category === "blog" && src.region === "global") {
+      // 1 件ずつ順に取る（同じサイトへ同時に大量のリクエストを送らない）
+      for (const e of found) {
+        if (e.text.length < ENRICH_BELOW && isHttps(e.url)) {
+          const more = await articleText(e.url);
+          if (more.length > e.text.length) e.text = more;
+        }
+      }
+    }
+    return found;
   },
 
   // Snowflake はフィードがないため、一覧ページの日付入りリンクから個別ページを取得する
@@ -77,7 +109,8 @@ const collectors = {
   },
 };
 
-const LIMITS = { platform: 1200, oss: 3000, ai: 1200, blog: 400 }; // 1項目あたりの本文の最大文字数
+// 1項目あたりの本文の最大文字数。海外ブログは英語で情報量が少なく見えやすいので長めに渡す
+const LIMITS = { platform: 1200, oss: 3000, ai: 1200, blog: 400, "blog:global": 1500 };
 const items = [];
 const coverage = [];
 await Promise.all(
@@ -87,11 +120,12 @@ await Promise.all(
       found.forEach((e) =>
         items.push({
           category: src.category,
+          ...(src.region ? { region: src.region } : {}),
           source: src.name,
           title: truncate(e.title, 200),
           url: e.url,
           date: e.date.toISOString(),
-          text: truncate(e.text, LIMITS[src.category]),
+          text: truncate(e.text, LIMITS[`${src.category}:${src.region}`] ?? LIMITS[src.category]),
         }),
       );
       coverage.push({ source: src.name, category: src.category, status: found.length ? "updated" : "no-updates", count: found.length });

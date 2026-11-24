@@ -38,6 +38,8 @@ for (const l of links) {
   if (!/^https:\/\//.test(l)) errors.push(`https 以外のリンク: ${l}`);
 }
 if (/!\[/.test(prose)) errors.push("画像の埋め込みは使わない");
+// 色の記号による影響度の表示はやめ、ステータス（GA / Public Preview など）で分類する
+if (/🔴|🟡|🟢/u.test(body)) errors.push("色の記号（🔴🟡🟢）は使わない。ステータスの見出しで分類する");
 for (const h of ["## 今週のアクション", "## トレンド"]) {
   if (!body.includes(h)) errors.push(`必須の見出しがない: ${h}`);
 }

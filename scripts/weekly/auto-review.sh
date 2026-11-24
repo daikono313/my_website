@@ -11,7 +11,7 @@ cat > ".security-review/$sha.md" <<MD
 Verdict: PASS
 - Commit: \`$sha\` / Base: \`$base\`
 - 対象範囲: \`$file\`（コンテンツのみ。Cloudflare Workers AI が収集 $items 件から生成）
-- 制約: 自動診断のみ。内容の正しさ（AI の要約・影響度の判断）は、マージ前に人が確認する
+- 制約: 自動診断のみ。内容の正しさ（AI の要約・項目の選び方）は、マージ前に人が確認する
 
 ### 自動検査
 | 検査 | 結果 |
@@ -28,6 +28,6 @@ Verdict: PASS
 | その他 | | N/A | コード・設定の変更なし |
 
 ### Findings
-なし（AI の誤要約・誤った影響度は、レビューで確認すること）
+なし（AI の誤要約・項目の選び方は、レビューで確認すること。ステータスはスクリプトが原文の表記から判定）
 MD
 echo ".security-review/$sha.md"
