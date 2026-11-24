@@ -238,7 +238,7 @@ const shownInAi = new Set(ai.map((x) => x.id));
 const reading = (arr, region, n) =>
   pick(arr, ["blog"]).filter((x) => byId.get(x.id).region === region && !shownInAi.has(x.id)).slice(0, n);
 for (const [label, xs] of [
-  ["海外・公式", reading(out.reading_global, "global", 3)],
+  ["海外", reading(out.reading_global, "global", 3)],
   ["国内", reading(out.reading_ja, "ja", 2)],
 ]) {
   md.push("", `### ${label}`, "");

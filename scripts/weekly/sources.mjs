@@ -1,6 +1,6 @@
 // Weekly Tech Note の情報源（自動収集・Claude による手動作成の両方で使う唯一のリスト）
 // category: platform（製品リリースノート）/ oss / ai / blog
-// region（blog のみ）: global（海外・公式。Pickup の海外枠）/ ja（国内。Pickup の国内枠）
+// region（blog のみ）: global（海外。Pickup の海外枠）/ ja（国内。Pickup の国内枠）
 // url の代わりに urls を書くと、複数のフィードを 1 つの収集元としてまとめる
 // include: タイトル・本文がこの正規表現に一致する項目だけを残す（データと関係の薄い記事が多い収集元用）
 
