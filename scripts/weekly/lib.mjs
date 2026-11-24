@@ -78,3 +78,30 @@ export const plainLine = (s) =>
     .replace(/\s+/g, " ")
     .replace(/[<>\[\]()`*_|]/g, (c) => ({ "<": "＜", ">": "＞", "[": "［", "]": "］", "(": "（", ")": "）", "`": "'", "*": "", _: " ", "|": "｜" })[c])
     .trim();
+
+// ステータス: リリースノートの表記（タイトル → 本文の冒頭の順）から決める。AI の判断は使わない
+// 「Preview」とだけ書かれたものは、公開されたリリースノートでの告知なので Public Preview として扱う
+// 判定は上から順に行う（例: 「will soon be generally available」は GA ではなく「今後の変更」）。どれにも当たらなければ「記載なし」
+export const STATUS_ORDER = ["非推奨・廃止", "今後の変更", "変更", "GA", "Public Preview", "Private Preview", "Beta", "記載なし"];
+const STATUS_RULES = [
+  ["非推奨・廃止", /deprecat|retire|legacy model|end of (life|support)|sunset|廃止|非推奨/i],
+  ["今後の変更", /\bwill\b|upcoming|coming soon|scheduled to|今後|予定/i],
+  ["Private Preview", /private preview|限定プレビュー|プライベートプレビュー/i],
+  ["Public Preview", /public preview|パブリックプレビュー/i],
+  ["Beta", /\bbeta\b|ベータ/i],
+  ["Public Preview", /\bpreview\b|プレビュー/i],
+  ["GA", /generally available|general availability|\(ga\)|\bga\b|一般提供/i],
+  ["変更", /breaking change|behavior change|no longer|default behavior|動作の変更|破壊的変更/i],
+];
+const matchStatus = (s) => STATUS_RULES.find(([, re]) => re.test(s))?.[0];
+export const statusOf = (it) => matchStatus(it.title) ?? matchStatus((it.text ?? "").slice(0, 300)) ?? "記載なし";
+
+// OSS のリリース種別: バージョン番号から決める（x.0.0 = メジャー、x.y.0 = マイナー、それ以外 = パッチ）
+export function releaseKind(title) {
+  if (/pre-release|プレリリース|-rc|\brc\d|alpha|beta|\.dev\d|\d(a|b|rc)\d+\b/i.test(title)) return "プレリリース";
+  const m = title.match(/(\d+)\.(\d+)(?:\.(\d+))?/);
+  if (!m) return "リリース";
+  const [, , minor, patch = "0"] = m;
+  if (minor === "0" && patch === "0") return "メジャー";
+  return patch === "0" ? "マイナー" : "パッチ";
+}

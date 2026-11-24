@@ -44,7 +44,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 - `src/components/`: `SiteNav`（タブ）、`PageHeader`（見出し）、`PostCards`（トップのカード）、`PostList`（一覧）、`TagList`（タグ → タグ検索へのリンク）
 - `src/lib/posts.ts`: 記事とウィークリーを共通の `Post` 型で扱う（一覧・トップ・検索で共用）
 - `src/styles/global.css`: スタイルはこの1ファイル。色は `:root` の変数で、ダークモードに対応
-- `scripts/weekly/`: Weekly Tech Note の自動生成（`sources.mjs` 情報源 / `collect.mjs` 収集 / `generate.mjs` Workers AI で生成・描画 / `auto-review.sh` 自動診断レポート）。AI には項目 ID と（照合用の）タイトルだけを返させ、リンクはスクリプトが収集した URL から差し込む。タイトルが一致しない参照は捨てる
+- `scripts/weekly/`: Weekly Tech Note の自動生成（`sources.mjs` 情報源 / `collect.mjs` 収集 / `generate.mjs` Workers AI で生成・描画 / `auto-review.sh` 自動診断レポート）。AI には項目 ID と（照合用の）タイトルだけを返させ、リンクはスクリプトが収集した URL から差し込む。タイトルが一致しない参照は捨てる。リリースのステータス（GA / Public Preview など）と OSS の種別は AI ではなくスクリプトが原文の表記から判定する（`lib.mjs`）。Pickup は海外・公式 3 本と国内 2 本の枠
 
 ### 守ること
 - **CSP**（`public/_headers`）: インラインのスクリプト・スタイルは使わない（`style="..."` も不可）。スクリプトは `src/client/` に置き、Astro に外部ファイルとして出力させる。例外は実行されない構造化データ（`type="application/ld+json"`）だけで、必ず `jsonLd()` を通して出力する

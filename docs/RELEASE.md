@@ -16,7 +16,7 @@
 |---|----------|----------------|
 | 1 | 毎週月曜 07:17 JST に `weekly-report.yml` が前週分を収集し、Cloudflare Workers AI（無料枠）で生成する。schedule は数時間遅れることがあるため、12:43 JST に予備の実行がある（作成済みならスキップ） | GitHub Actions（schedule）。手動実行は Actions 画面から `week` を指定 |
 | 2 | `validate-weekly --check-links`・build・`security-scan` がすべて通ったら、自動診断レポートを作って push → PR → 診断結果をコメント → bot の PR で承認待ちになる CI（`build-and-scan`・Preview）を承認 | ワークフロー内のステップ、pre-push hook |
-| 3 | Preview URL で内容と影響度を確認し、問題なければマージする（AI の誤りは公開前にここで止める）。質が足りなければ skill `weekly-tech-report` で Claude が書き直す | ブランチ保護（PR 必須・CI 必須） |
+| 3 | Preview URL で内容（AI の要約・項目の選び方）を確認し、問題なければマージする（AI の誤りは公開前にここで止める）。質が足りなければ skill `weekly-tech-report` で Claude が書き直す | ブランチ保護（PR 必須・CI 必須） |
 
 ## 初回セットアップ
 - `npm install`（`prepare` で `core.hooksPath=.githooks` を設定）
