@@ -17,9 +17,7 @@ const ld = collectionLd(Astro.site!, {
 ---
 
 <Base title={`Articles（技術記事）— ${profile.name}`} description={description} nav="articles" structuredData={[ld]} breadcrumb={[{ name: "Home", path: "/" }, { name: "Articles", path: "/articles/" }]}>
-  <PageHeader title="Articles">
-    <span>技術記事 {posts.length} 件。実際に試した手順と判断の基準をまとめています</span>
-  </PageHeader>
+  <PageHeader title="Articles" />
   <section>
     <PostList posts={posts} empty="まだ記事はありません。" />
   </section>
