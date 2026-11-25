@@ -48,7 +48,7 @@ description: データ基盤・OSS・AI×データ・注目記事の Weekly Tech
 | Public Preview | public preview。「Preview」とだけ書かれたものもここ |
 | Private Preview | private preview |
 | Beta | beta |
-| 記載なし | 上のどれも書かれていない（推測で GA などにしない） |
+| Other News | 上のどれも書かれていない（推測で GA などにしない） |
 
 「今週のアクション」は緊急度の高い順（破壊的変更・廃止日・セキュリティ修正・期限付きの移行 → 既存構成やコストを改善できる GA 機能）に並べる。
 
@@ -80,7 +80,7 @@ tags: [<本文に登場する主な製品・OSS名。表記は既存レポート
 
 ## リリースノート（製品別）
 
-ステータスは各リリースノートの表記からスクリプトが判定しています（AI は判定していません）。「Preview」とだけ書かれたものは Public Preview、「will soon」などの予告は「今後の変更」、表記がないものは「記載なし」です。
+ステータスは各リリースノートの表記からスクリプトが判定しています（AI は判定していません）。「Preview」とだけ書かれたものは Public Preview、「will soon」などの予告は「今後の変更」、表記がないものは「Other News」です。
 
 ### Snowflake
 
