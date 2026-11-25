@@ -181,7 +181,7 @@ md.push("");
 md.push("## リリースノート（製品別）");
 md.push(
   "",
-  "ステータスは各リリースノートの表記からスクリプトが判定しています（AI は判定していません）。「Preview」とだけ書かれたものは Public Preview、「will soon」などの予告は「今後の変更」、表記がないものは「記載なし」です。",
+  "ステータスは各リリースノートの表記からスクリプトが判定しています（AI は判定していません）。「Preview」とだけ書かれたものは Public Preview、「will soon」などの予告は「今後の変更」、表記がないものは「Other News」です。",
   "",
 );
 const platform = pick(out.platform, ["platform"]);
