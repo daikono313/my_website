@@ -20,6 +20,7 @@ export const GET: APIRoute = async ({ site }) => {
     { path: "/weekly/", lastmod: latest(weeklies.map((w) => w.data.date)) },
     ...weeklies.map((w) => ({ path: `/weekly/${w.id}/`, lastmod: w.data.date })),
     { path: "/contact/" },
+    { path: "/privacy/" },
   ];
 
   const body = [

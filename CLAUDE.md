@@ -20,6 +20,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 |---|---|---|
 | `/` | `src/pages/index.astro` | Profile（名前・紹介文・リンク）→ Skills → Projects → GitHub 統計 → Articles（最新3件）→ Blog（最新3件）→ Weekly Tech Note（最新3件）→ Contact（フォームへのリンク） |
 | `/contact/` | `src/pages/contact/index.astro` + `src/client/contact.ts` | 問い合わせフォーム（概要・メールアドレス・内容。3つすべて入力するまで送信不可）。送信先のアドレスはサイトに一切出さない |
+| `/privacy/` | `src/pages/privacy.astro` | プライバシーポリシー・免責事項（問い合わせ・アクセス解析・広告の扱い）。フッターからリンク。アクセス記録・フォーム・広告の仕組みを変えたらここも直す |
 | `/api/contact` | `src/worker.ts` | フォームの受付。Origin 確認 → 入力検証 → Turnstile 検証 → Google Apps Script に転送（Apps Script が Gmail で送る） |
 | `/articles/` `/articles/<slug>/` | `src/pages/articles/` | 手書きの技術記事の一覧と詳細 |
 | `/blog/` `/blog/<slug>/` | `src/pages/blog/` + `src/client/blog.ts` | ブログの一覧（`?category=tech` `diet` `other` でカテゴリ絞り込み）と記事（`affiliate: true` なら PR 表記を自動表示・前後の記事へのリンク） |
