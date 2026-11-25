@@ -140,10 +140,6 @@ footer { padding: 40px 0 60px; border-top: 1px solid var(--border); font-family:
   .site-tabs a { padding: 8px 6px; }
   .tab-long { display: none; }
 }
-/* 5 タブを 320px 幅でも 1 行に収める */
-@media (max-width: 350px) {
-  .site-tabs a { padding: 8px 3px; font-size: 0.75rem; }
-}
 
 /* Post lists */
 .post-list { list-style: none; padding: 0; margin: 0; }
@@ -266,11 +262,6 @@ footer { padding: 40px 0 60px; border-top: 1px solid var(--border); font-family:
 /* 関連記事 */
 .related { margin-bottom: 48px; }
 
-/* Blog */
-.category-filter { margin-bottom: 12px; }
-.pr-badge { background: var(--muted); color: var(--bg); }
-.kind-badge + .kind-badge { margin-left: 4px; }
-/* affiliate: true の記事のタイトル直下に出す PR 表記（article-meta の flex の中で 1 行を占める） */
+/* 広告（affiliate: true）のページのタイトル直下に出す PR 表記（PrNotice.astro。article-meta の flex の中で 1 行を占める） */
 .pr-notice { flex-basis: 100%; margin: 0; font-family: var(--sans); font-size: 0.85rem; color: var(--text); }
-.pr-notice .pr-badge { display: inline-block; font-family: var(--mono); font-size: 0.7rem; font-weight: 600; padding: 1px 6px; margin-right: 8px; border-radius: 4px; }
-.prose img.cover { display: block; margin: 0 0 24px; }
+.pr-notice .pr-badge { display: inline-block; font-family: var(--mono); font-size: 0.7rem; font-weight: 600; padding: 1px 6px; margin-right: 8px; border-radius: 4px; background: var(--muted); color: var(--bg); }

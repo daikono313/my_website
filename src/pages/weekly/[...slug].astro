@@ -2,6 +2,7 @@
 import Base from "../../layouts/Base.astro";
 import PageHeader from "../../components/PageHeader.astro";
 import TagList from "../../components/TagList.astro";
+import PrNotice from "../../components/PrNotice.astro";
 import { profile } from "../../data/profile";
 import { getWeeklies, fmtDate, fmtPeriod, type WeeklyEntry } from "../../lib/posts";
 import { render } from "astro:content";
@@ -29,6 +30,7 @@ const ld = articleLd(Astro.site!, {
 
 <Base title={`${d.title} — ${profile.name}`} description={d.description} nav="weekly" type="article" published={d.date} structuredData={[ld]} breadcrumb={[{ name: "Home", path: "/" }, { name: "Weekly Tech Note", path: "/weekly/" }, { name: d.title, path: Astro.url.pathname }]}>
   <PageHeader title={d.title}>
+    {d.affiliate && <PrNotice />}
     <span>対象期間 {fmtPeriod(d.weekStart, d.weekEnd)}（生成 {fmtDate(d.date)}）</span>
     <TagList tags={d.tags} />
   </PageHeader>

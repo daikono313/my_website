@@ -19,15 +19,12 @@ interface Props {
   structuredData?: object[];
   /** パンくず。Home から現在のページまで。画面に表示し、BreadcrumbList の構造化データにもする */
   breadcrumb?: { name: string; path: string }[];
-  /** OGP 画像（サイト内のパス）と代替テキスト。指定したときだけ og:image を出す */
-  image?: { src: string; alt: string };
 }
-const { title, description = profile.summary, nav, type = "website", published, modified, noindex = false, structuredData = [], breadcrumb, image } = Astro.props;
+const { title, description = profile.summary, nav, type = "website", published, modified, noindex = false, structuredData = [], breadcrumb } = Astro.props;
 
 // canonical は常に本番の URL（astro.config.mjs の site）を指す。Preview の URL が検索結果に重複して出ないようにする
 const site = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(Astro.url.pathname, site).href;
-const ogImage = image ? new URL(image.src, site).href : undefined;
 const ld = breadcrumb ? [...structuredData, breadcrumbLd(site, breadcrumb)] : structuredData;
 
 // Cloudflare Web Analytics。本番デプロイ時だけ token を渡す（Preview・ローカルでは計測しない）
@@ -52,14 +49,12 @@ const beacon = /^[0-9a-f]{32}$/.test(analyticsToken ?? "") ? JSON.stringify({ to
     <meta property="og:type" content={type} />
     <meta property="og:site_name" content={profile.name} />
     <meta property="og:locale" content="ja_JP" />
-    {ogImage && <meta property="og:image" content={ogImage} />}
-    {ogImage && <meta property="og:image:alt" content={image!.alt} />}
-    <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
+    <meta name="twitter:card" content="summary" />
     {published && <meta property="article:published_time" content={published.toISOString()} />}
     {modified && <meta property="article:modified_time" content={modified.toISOString()} />}
     <meta name="author" content={profile.name} />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
-    <link rel="alternate" type="application/rss+xml" title={`${profile.name} の記事・ブログ・Weekly Tech Note`} href="/rss.xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${profile.name} の記事と Weekly Tech Note`} href="/rss.xml" />
     {ld.map((d) => <script is:inline type="application/ld+json" set:html={jsonLd(d as never)} />)}
     {beacon && <script is:inline type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={beacon}></script>}
   </head>

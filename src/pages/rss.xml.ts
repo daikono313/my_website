@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 import { profile } from "../data/profile";
 import { getAllPosts, KINDS } from "../lib/posts";
 
-// 記事・ブログ・Weekly Tech Note の RSS 2.0 フィード（ビルド時に静的生成）。フィードリーダーや AI の収集向け
+// 記事と Weekly Tech Note の RSS 2.0 フィード（ビルド時に静的生成）。フィードリーダーや AI の収集向け
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 
@@ -30,7 +30,7 @@ export const GET: APIRoute = async ({ site }) => {
     `    <title>${esc(profile.name)}</title>`,
     `    <link>${esc(new URL("/", base).href)}</link>`,
     `    <atom:link href="${esc(new URL("/rss.xml", base).href)}" rel="self" type="application/rss+xml" />`,
-    `    <description>${esc(`${profile.summary}技術記事・ブログ・Weekly Tech Note の更新情報。`)}</description>`,
+    `    <description>${esc(`${profile.summary}技術記事と Weekly Tech Note の更新情報。`)}</description>`,
     "    <language>ja</language>",
     ...(posts[0] ? [`    <lastBuildDate>${posts[0].date.toUTCString()}</lastBuildDate>`] : []),
     ...items,
