@@ -263,9 +263,10 @@ footer { padding: 40px 0 60px; border-top: 1px solid var(--border); font-family:
 .related { margin-bottom: 48px; }
 
 /* 広告（アフィリエイトリンク）の直前に「PR」ラベルを自動で付ける（景品表示法のステルスマーケティング規制への対応）
-   本文は [商品名](ASP の URL) と書くだけでよい。新しい ASP を使うときは、そのクリック用 URL のドメインをここに足す */
+   本文は [商品名](ASP の URL) と書くだけでよい。新しい ASP を使うときは、そのクリック用 URL のドメインをここと scripts/validate-weekly.mjs の AD_HOSTS に足す */
 .prose :is(
   a[href*="//px.a8.net/"],
+  a[href*="//rpx.a8.net/"], /* A8.net 経由の楽天の商品リンク */
   a[href*="af.moshimo.com/"],
   a[href*="//hb.afl.rakuten.co.jp/"],
   a[href*="//ck.jp.ap.valuecommerce.com/"],
