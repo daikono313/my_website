@@ -51,7 +51,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 - **CSP**（`public/_headers`）: インラインのスクリプト・スタイルは使わない（`style="..."` も不可）。スクリプトは `src/client/` に置き、Astro に外部ファイルとして出力させる。例外は実行されない構造化データ（`type="application/ld+json"`）だけで、必ず `jsonLd()` を通して出力する
 - クライアント JS で DOM を組み立てるときは `textContent` を使い、`innerHTML` は使わない
 - コンテンツの Markdown: `javascript:` などの危険なリンクは書かない。生の HTML は **記事（articles）だけ** 許可し、`<details>` `<kbd>` `<figure>` `<a>` `<img>`（自サイトの画像）など表示用のものに限る。`<script>` `<iframe>` `<form>` `<style>` `<svg>` など、`on〜` 属性・`style` 属性は禁止（CSP でも動かない）。AI が生成する Weekly は生の HTML を一切禁止（`scripts/security-scan.sh` が検出する）
-- 広告（アフィリエイトリンク）を入れた記事・ウィークリーは frontmatter を `affiliate: true` にする（タイトル直下に PR 表記が自動で出る。ステマ規制対応）。リンクは ASP の URL だけを Markdown のリンクにし、ASP の `<img>`（計測用画像・バナー）・`<script>` は貼らない（CSP で表示されない）。Weekly の自動生成（AI）には入れさせず、人が確認時に足す。書き方は skill `seo-aio-article` の「広告」
+- 広告（アフィリエイトリンク）は ASP の URL だけを Markdown のリンクにする（`[商品名](https://px.a8.net/...)`）。リンクの前に「PR」ラベルが CSS で自動で付く（`src/styles/global.css` の ASP ドメイン一覧。ステマ規制対応。新しい ASP を使うときはドメインを足す）。ASP の `<img>`（計測用画像・バナー）・`<script>` は貼らない（CSP で表示されない）。Weekly の自動生成（AI）には入れさせず、人が確認時に足す。書き方は skill `seo-aio-article` の「5.1 広告」
 - アクセス記録に IP・UA 全文・リファラーの URL 全体・Cookie を保存しない（docs/analytics.md）
 - 問い合わせの送信先アドレスは Apps Script のスクリプトプロパティにだけ置く。リポジトリ・Worker・ページに書かない
 

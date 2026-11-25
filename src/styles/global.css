@@ -262,6 +262,25 @@ footer { padding: 40px 0 60px; border-top: 1px solid var(--border); font-family:
 /* 関連記事 */
 .related { margin-bottom: 48px; }
 
-/* 広告（affiliate: true）のページのタイトル直下に出す PR 表記（PrNotice.astro。article-meta の flex の中で 1 行を占める） */
-.pr-notice { flex-basis: 100%; margin: 0; font-family: var(--sans); font-size: 0.85rem; color: var(--text); }
-.pr-notice .pr-badge { display: inline-block; font-family: var(--mono); font-size: 0.7rem; font-weight: 600; padding: 1px 6px; margin-right: 8px; border-radius: 4px; background: var(--muted); color: var(--bg); }
+/* 広告（アフィリエイトリンク）の直前に「PR」ラベルを自動で付ける（景品表示法のステルスマーケティング規制への対応）
+   本文は [商品名](ASP の URL) と書くだけでよい。新しい ASP を使うときは、そのクリック用 URL のドメインをここに足す */
+.prose :is(
+  a[href*="//px.a8.net/"],
+  a[href*="af.moshimo.com/"],
+  a[href*="//hb.afl.rakuten.co.jp/"],
+  a[href*="//ck.jp.ap.valuecommerce.com/"],
+  a[href*="//amzn.to/"]
+)::before {
+  content: "PR";
+  display: inline-block; /* リンクの下線を PR に付けない */
+  margin-right: 4px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.7em;
+  font-weight: 600;
+  line-height: 1.6;
+  vertical-align: 0.1em;
+  background: var(--muted);
+  color: var(--bg);
+}

@@ -10,7 +10,6 @@ const articles = defineCollection({
     description: z.string(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
-    affiliate: z.boolean().default(false), // 広告（アフィリエイトリンク）を含むなら true。タイトル直下に PR 表記を自動で出す
     // 以下は SEO・AIO 用（任意）。書き方は skill `seo-aio-article`
     updated: z.coerce.date().optional(), // 内容を更新した日。表示と構造化データの dateModified に使う
     summary: z.array(z.string()).min(1).max(5).optional(), // 冒頭に出す「この記事の要点」（プレーンテキスト）
@@ -30,7 +29,6 @@ const weekly = defineCollection({
     highlights: z.array(z.string()).min(1).max(5), // 今週の注目ポイント（プレーンテキスト）
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
-    affiliate: z.boolean().default(false), // 広告を含むなら true（人が確認時に付ける。AI の自動生成では付けない）
   }),
 });
 

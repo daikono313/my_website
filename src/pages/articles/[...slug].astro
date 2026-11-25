@@ -2,7 +2,6 @@
 import Base from "../../layouts/Base.astro";
 import PageHeader from "../../components/PageHeader.astro";
 import TagList from "../../components/TagList.astro";
-import PrNotice from "../../components/PrNotice.astro";
 import { profile } from "../../data/profile";
 import PostCards from "../../components/PostCards.astro";
 import { getArticles, getPosts, fmtDate, type ArticleEntry } from "../../lib/posts";
@@ -53,7 +52,6 @@ if (d.faq?.length) structuredData.push(faqLd(d.faq));
   breadcrumb={[{ name: "Home", path: "/" }, { name: "Articles", path: "/articles/" }, { name: d.title, path: Astro.url.pathname }]}
 >
   <PageHeader title={d.title}>
-    {d.affiliate && <PrNotice />}
     <span>
       公開 <time datetime={d.date.toISOString()}>{fmtDate(d.date)}</time>
       {d.updated && <>{" · 更新 "}<time datetime={d.updated.toISOString()}>{fmtDate(d.updated)}</time></>}
