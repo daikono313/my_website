@@ -1,6 +1,6 @@
 // /search/ ページのクライアント側検索。DOM は textContent で組み立て、HTML 文字列は使わない
 type Item = {
-  kind: "articles" | "weekly";
+  kind: "articles" | "weekly" | "blog";
   kindLabel: string;
   url: string;
   title: string;

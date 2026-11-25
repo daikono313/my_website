@@ -1,0 +1,61 @@
+---
+import Base from "../../layouts/Base.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import TagList from "../../components/TagList.astro";
+import { profile } from "../../data/profile";
+import { getBlogPosts, fmtDate } from "../../lib/posts";
+import { BLOG_CATEGORIES, categorySlug } from "../../lib/blog-categories";
+import { collectionLd } from "../../lib/seo";
+
+const posts = await getBlogPosts();
+const count = (label: string) => posts.filter((p) => p.data.category === label).length;
+const description = `${profile.name} のブログ。技術（Databricks・Snowflake・dbt・AI 駆動開発の実践）、減量の記録などを週 1 本ペースで書いています。`;
+const ld = collectionLd(Astro.site!, {
+  url: new URL(Astro.url.pathname, Astro.site),
+  name: `Blog｜${profile.name}`,
+  description,
+  items: posts.map((p) => ({ url: `/blog/${p.id}/`, name: p.data.title })),
+});
+---
+
+<Base title={`Blog — ${profile.name}`} description={description} nav="blog" structuredData={[ld]} breadcrumb={[{ name: "Home", path: "/" }, { name: "Blog", path: "/blog/" }]}>
+  <PageHeader title="Blog">
+    <span>技術・減量記録などのブログ {posts.length} 件</span>
+  </PageHeader>
+  <section>
+    {posts.length > 0 ? (
+      <>
+        {/* カテゴリの絞り込み（src/client/blog.ts）。JS が無効なときは全件を表示する */}
+        <nav class="tag-filter category-filter" aria-label="カテゴリで絞り込み">
+          <a class="tag-chip" href="/blog/" data-category="">すべて <span>{posts.length}</span></a>
+          {BLOG_CATEGORIES.map((c) => (
+            <a class="tag-chip" href={`/blog/?category=${c.slug}`} data-category={c.slug}>{c.label} <span>{count(c.label)}</span></a>
+          ))}
+        </nav>
+        <ul class="post-list" id="blog-list">
+          {posts.map((p) => (
+            <li data-category={categorySlug(p.data.category)}>
+              <time datetime={p.data.pubDate.toISOString()}>{fmtDate(p.data.pubDate)}</time>
+              <div>
+                <a class="post-title" href={`/blog/${p.id}/`}>{p.data.title}</a>
+                <span class="kind-badge">{p.data.category}</span>
+                {p.data.affiliate && <span class="kind-badge pr-badge">PR</span>}
+                {p.data.draft && <span class="draft">下書き</span>}
+                <p>{p.data.description}</p>
+                <TagList tags={p.data.tags} />
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p class="empty" id="blog-empty" hidden>このカテゴリの記事はまだありません。</p>
+      </>
+    ) : (
+      <p class="empty">まだ記事はありません。</p>
+    )}
+  </section>
+</Base>
+
+<script>
+  import { initBlogFilter } from "../../client/blog";
+  initBlogFilter();
+</script>

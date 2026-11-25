@@ -95,10 +95,11 @@ export const contactPageLd = (site: URL, url: URL, description: string) => ({
 
 export const articleLd = (
   site: URL,
-  a: { url: URL; title: string; description: string; published: Date; modified?: Date; tags: string[] },
+  a: { url: URL; title: string; description: string; published: Date; modified?: Date; tags: string[]; type?: "TechArticle" | "BlogPosting"; image?: string },
 ) => ({
   "@context": "https://schema.org",
-  "@type": "TechArticle",
+  "@type": a.type ?? "TechArticle",
+  ...(a.image ? { image: a.image } : {}),
   headline: a.title,
   description: a.description,
   url: a.url.href,

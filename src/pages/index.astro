@@ -7,11 +7,12 @@ import { getPosts, fmtDate } from "../lib/posts";
 import { profilePageLd } from "../lib/seo";
 
 const user = profile.githubUser;
-const [allRepos, stats, articles, weeklies] = await Promise.all([
+const [allRepos, stats, articles, weeklies, blogPosts] = await Promise.all([
   getRepos(user),
   getStats(user),
   getPosts("articles"),
   getPosts("weekly"),
+  getPosts("blog"),
 ]);
 
 const featured = featuredRepos
@@ -31,7 +32,7 @@ const avg = (n: number) => n.toFixed(1);
 // 検索結果に出るタイトルと説明。名前・日本語の肩書き・扱う分野を入れる
 const pageTitle = `${profile.name}｜${profile.titleJa}（${profile.topics.slice(0, 2).join("・")}）`;
 const pageDescription = `${profile.summary}技術記事と、データ基盤・OSS・AI×データの動きを毎週まとめた Weekly Tech Note を公開しています。`;
-const lastUpdated = [...articles, ...weeklies].map((p) => p.date).sort((a, b) => b.getTime() - a.getTime())[0];
+const lastUpdated = [...articles, ...weeklies, ...blogPosts].map((p) => p.date).sort((a, b) => b.getTime() - a.getTime())[0];
 ---
 
 <Base title={pageTitle} description={pageDescription} nav="home" structuredData={[profilePageLd(Astro.site!, lastUpdated)]}>
@@ -107,6 +108,11 @@ const lastUpdated = [...articles, ...weeklies].map((p) => p.date).sort((a, b) =>
   <section id="articles">
     <h2>Articles</h2>
     <PostCards posts={articles.slice(0, 3)} total={articles.length} moreHref="/articles/" empty="まだ記事はありません。" />
+  </section>
+
+  <section id="blog">
+    <h2>Blog</h2>
+    <PostCards posts={blogPosts.slice(0, 3)} total={blogPosts.length} moreHref="/blog/" empty="まだ記事はありません。" />
   </section>
 
   <section id="weekly">

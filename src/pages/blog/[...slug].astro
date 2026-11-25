@@ -1,0 +1,68 @@
+---
+import Base from "../../layouts/Base.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import TagList from "../../components/TagList.astro";
+import { profile } from "../../data/profile";
+import { getBlogPosts, fmtDate, type BlogEntry } from "../../lib/posts";
+import { categoryHref } from "../../lib/blog-categories";
+import { articleLd } from "../../lib/seo";
+import { render } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getBlogPosts(); // 新しい順（draft は本番では含まれない）
+  return posts.map((p, i) => ({
+    params: { slug: p.id },
+    props: { post: p, newer: posts[i - 1], older: posts[i + 1] },
+  }));
+}
+
+const { post, newer, older } = Astro.props as { post: BlogEntry; newer?: BlogEntry; older?: BlogEntry };
+const { Content } = await render(post);
+const d = post.data;
+const updated = d.updatedDate ?? undefined;
+const image = d.image && d.imageAlt ? { src: d.image.src, alt: d.imageAlt } : undefined;
+const url = new URL(Astro.url.pathname, Astro.site);
+---
+
+<Base
+  title={`${d.title} — ${profile.name}`}
+  description={d.description}
+  nav="blog"
+  type="article"
+  published={d.pubDate}
+  modified={updated}
+  image={image}
+  structuredData={[
+    articleLd(Astro.site!, {
+      type: "BlogPosting",
+      url,
+      title: d.title,
+      description: d.description,
+      published: d.pubDate,
+      modified: updated,
+      tags: d.tags,
+      image: image && new URL(image.src, Astro.site).href,
+    }),
+  ]}
+  breadcrumb={[{ name: "Home", path: "/" }, { name: "Blog", path: "/blog/" }, { name: d.title, path: Astro.url.pathname }]}
+>
+  <PageHeader title={d.title}>
+    {/* 景品表示法のステルスマーケティング規制に対応する PR 表記。affiliate: true の記事にだけ自動で出す */}
+    {d.affiliate && <p class="pr-notice"><span class="pr-badge">PR</span>本記事には広告（アフィリエイトリンク）が含まれます。</p>}
+    <span>
+      公開 <time datetime={d.pubDate.toISOString()}>{fmtDate(d.pubDate)}</time>
+      {updated && <>{" · 更新 "}<time datetime={updated.toISOString()}>{fmtDate(updated)}</time></>}
+      {" · "}<a href={categoryHref(d.category)}>{d.category}</a>
+    </span>
+    {d.draft && <span class="draft">下書き（本番には出ません）</span>}
+    <TagList tags={d.tags} />
+  </PageHeader>
+  <article class="prose">
+    {image && <img class="cover" src={image.src} alt={image.alt} width={d.image!.width} height={d.image!.height} />}
+    <Content />
+  </article>
+  <nav class="pager" aria-label="前後の記事">
+    {older ? <a href={`/blog/${older.id}/`}>← {older.data.title}</a> : <span />}
+    {newer ? <a href={`/blog/${newer.id}/`}>{newer.data.title} →</a> : <span />}
+  </nav>
+</Base>

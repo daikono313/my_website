@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="160" viewBox="0 0 640 160" font-family="sans-serif" font-size="18">
+  <rect width="640" height="160" fill="#f5f5f4"/>
+  <g fill="#ffffff" stroke="#0369a1" stroke-width="2">
+    <rect x="20" y="50" width="160" height="60" rx="8"/>
+    <rect x="240" y="50" width="160" height="60" rx="8"/>
+    <rect x="460" y="50" width="160" height="60" rx="8"/>
+  </g>
+  <g fill="#1c1917" text-anchor="middle">
+    <text x="100" y="86">下書きを書く</text>
+    <text x="320" y="86">PR で確認</text>
+    <text x="540" y="86">マージで公開</text>
+  </g>
+  <g stroke="#0369a1" stroke-width="2" fill="none">
+    <path d="M184 80h48m-8-6 8 6-8 6"/>
+    <path d="M404 80h48m-8-6 8 6-8 6"/>
+  </g>
+</svg>

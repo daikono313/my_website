@@ -15,13 +15,14 @@
 
 Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信している。本番は https://de.daisuke-harato.workers.dev
 
-### ページ（上部バー: 左にタブ Home / Articles / Weekly Tech Note / Contact、右に常設の検索欄 → `/search/?q=`）
+### ページ（上部バー: 左にタブ Home / Articles / Blog / Weekly Tech Note / Contact、右に常設の検索欄 → `/search/?q=`）
 | URL | ファイル | 内容 |
 |---|---|---|
-| `/` | `src/pages/index.astro` | Profile（名前・紹介文・リンク）→ Skills → Projects → GitHub 統計 → Articles（最新3件）→ Weekly Tech Note（最新3件）→ Contact（フォームへのリンク） |
+| `/` | `src/pages/index.astro` | Profile（名前・紹介文・リンク）→ Skills → Projects → GitHub 統計 → Articles（最新3件）→ Blog（最新3件）→ Weekly Tech Note（最新3件）→ Contact（フォームへのリンク） |
 | `/contact/` | `src/pages/contact/index.astro` + `src/client/contact.ts` | 問い合わせフォーム（概要・メールアドレス・内容。3つすべて入力するまで送信不可）。送信先のアドレスはサイトに一切出さない |
 | `/api/contact` | `src/worker.ts` | フォームの受付。Origin 確認 → 入力検証 → Turnstile 検証 → Google Apps Script に転送（Apps Script が Gmail で送る） |
 | `/articles/` `/articles/<slug>/` | `src/pages/articles/` | 手書きの技術記事の一覧と詳細 |
+| `/blog/` `/blog/<slug>/` | `src/pages/blog/` + `src/client/blog.ts` | ブログの一覧（`?category=tech` `diet` `other` でカテゴリ絞り込み）と記事（`affiliate: true` なら PR 表記を自動表示・前後の記事へのリンク） |
 | `/weekly/` `/weekly/<weekStart>/` | `src/pages/weekly/` | Weekly Tech Note の一覧と詳細（注目ポイント・前後の週へのリンク・AI 生成の注記） |
 | `/api/pv` | `src/worker.ts` + `src/client/pv.ts` | ページ表示の記録（本番のみ）→ Workers Analytics Engine。SQL での分析方法は docs/analytics.md |
 | `/search/` | `src/pages/search.astro` + `src/client/search.ts` | キーワード・種類・タグによる検索。`?q=` `?kind=` `?tag=` で条件を共有できる |
@@ -32,8 +33,9 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 | 置き場所 | 内容 | 追加方法 |
 |---|---|---|
 | `src/content/articles/*.md` | 技術記事。frontmatter の `summary`（要点）・`faq`・`updated` は任意で、要点ボックス・よくある質問・構造化データになる | 手で書いて PR。書き方は skill `seo-aio-article`（SEO・AIO） |
+| `src/content/blog/<slug>.md` | ブログ（技術 / 減量記録 / その他） | 手で書いて PR。手順は docs/blog.md。画像は `src/content/blog/images/<slug>/` |
 | `src/content/weekly/<weekStart>.md` | Weekly Tech Note | 毎週月曜に GitHub Actions + Workers AI が自動生成して PR → 人が確認してマージ。手動で作り直すときは skill `weekly-tech-report` |
-| `src/content.config.ts` | 上記2つの frontmatter スキーマ | |
+| `src/content.config.ts` | 上記3つの frontmatter スキーマ（ブログのカテゴリは `src/lib/blog-categories.ts`） | |
 | `src/data/profile.ts` | プロフィール・スキル・強調するリポジトリ | 手で編集 |
 | `src/lib/github.ts` | GitHub 統計（ビルド時に API から取得。公開リポジトリのみ） | |
 
@@ -42,7 +44,7 @@ Astro の静的サイトを Cloudflare Workers（Worker 名 `de`）で配信し�
 - `src/layouts/Base.astro`: 全ページ共通（head、タブ、フッター、本番だけ Web Analytics と `/api/pv` への記録）。head に canonical（常に本番 URL）・OGP・JSON-LD を出す
 - `src/lib/seo.ts`: 構造化データ（JSON-LD。トップは ProfilePage、一覧は CollectionPage、詳細は TechArticle、パンくずは BreadcrumbList）の組み立てと、`<script type="application/ld+json">` に安全に埋め込むためのエスケープ（`jsonLd()`）
 - `src/components/`: `SiteNav`（タブ）、`PageHeader`（見出し）、`PostCards`（トップのカード）、`PostList`（一覧）、`TagList`（タグ → タグ検索へのリンク）
-- `src/lib/posts.ts`: 記事とウィークリーを共通の `Post` 型で扱う（一覧・トップ・検索で共用）
+- `src/lib/posts.ts`: 記事・ブログ・ウィークリーを共通の `Post` 型で扱う（一覧・トップ・検索・RSS で共用）。draft の除外とブログ画像の代替テキスト検査もここ
 - `src/styles/global.css`: スタイルはこの1ファイル。色は `:root` の変数で、ダークモードに対応
 - `scripts/weekly/`: Weekly Tech Note の自動生成（`sources.mjs` 情報源 / `collect.mjs` 収集 / `generate.mjs` Workers AI で生成・描画 / `auto-review.sh` 自動診断レポート）。AI には項目 ID と（照合用の）タイトルだけを返させ、リンクはスクリプトが収集した URL から差し込む。タイトルが一致しない参照は捨てる。リリースのステータス（GA / Public Preview など）と OSS の種別は AI ではなくスクリプトが原文の表記から判定する（`lib.mjs`）。Pickup は海外 3 本と国内 2 本の枠
 
