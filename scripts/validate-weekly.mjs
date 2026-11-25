@@ -45,8 +45,18 @@ for (const h of ["## 今週のアクション", "## トレンド"]) {
 }
 
 // リンク到達性
+// 広告（アフィリエイト）リンクにはアクセスしない。機械的なアクセスが不正なクリックとして数えられるおそれがあるため
+// （src/styles/global.css の PR ラベルの ASP ドメイン一覧と合わせる）
+const AD_HOSTS = ["px.a8.net", "rpx.a8.net", "af.moshimo.com", "c.af.moshimo.com", "hb.afl.rakuten.co.jp", "ck.jp.ap.valuecommerce.com", "amzn.to"];
+const isAd = (l) => {
+  try {
+    return AD_HOSTS.includes(new URL(l).hostname);
+  } catch {
+    return false;
+  }
+};
 if (checkLinks) {
-  const uniq = [...new Set(links.filter((l) => l.startsWith("https://")))];
+  const uniq = [...new Set(links.filter((l) => l.startsWith("https://") && !isAd(l)))];
   const results = await Promise.all(
     uniq.map(async (url) => {
       try {
