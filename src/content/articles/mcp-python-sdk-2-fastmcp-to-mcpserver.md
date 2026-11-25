@@ -137,8 +137,10 @@ print(mcp.instructions)  # None
 
 import csv
 import os
+from collections.abc import Callable, Iterator
+from itertools import islice
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -154,6 +156,8 @@ mcp = MCPServer(
     version="0.1.0",
     instructions="CSV を読み込む前に csv_info で列と行数を確認し、必要なら csv_head で先頭の数行を見る。",
 )
+
+T = TypeVar("T")
 
 
 class CsvInfo(BaseModel):
@@ -181,31 +185,39 @@ def resolve_csv(path: str) -> Path:
     return target
 
 
-def read_rows(target: Path) -> tuple[str, list[list[str]]]:
-    """UTF-8（BOM 付きも可）で読めなければ Shift_JIS（cp932）として読む。"""
+def read_csv(target: Path, read: Callable[[Iterator[list[str]]], T]) -> tuple[str, T]:
+    """UTF-8（BOM 付きも可）で読めなければ Shift_JIS（cp932）として読む。
+
+    行は 1 行ずつ read に渡す。ファイル全体をメモリに載せない。
+    """
     for encoding in ("utf-8-sig", "cp932"):
         try:
             with target.open(encoding=encoding, newline="") as f:
-                rows = list(csv.reader(f))
+                return encoding, read(csv.reader(f))
         except UnicodeDecodeError:
             continue
-        if not rows:
-            raise ToolError("空のファイルです。")
-        return encoding, rows
     raise ToolError("文字コードを判定できません（UTF-8 と Shift_JIS 以外）。")
+
+
+def header_and_count(rows: Iterator[list[str]]) -> tuple[list[str], int]:
+    """ヘッダー行と、残りの行数を返す。行は数えるだけで保持しない。"""
+    header = next(rows, None)
+    if header is None:
+        raise ToolError("空のファイルです。")
+    return header, sum(1 for _ in rows)
 
 
 @mcp.tool()
 def csv_info(path: Annotated[str, Field(description="CSV_ROOT からの相対パス")]) -> CsvInfo:
     """CSV の列名・行数・文字コード・サイズを返す。"""
     target = resolve_csv(path)
-    encoding, rows = read_rows(target)
+    encoding, (columns, rows) = read_csv(target, header_and_count)
     return CsvInfo(
         path=str(target.relative_to(ROOT)),
         size_bytes=target.stat().st_size,
         encoding=encoding,
-        rows=len(rows) - 1,
-        columns=rows[0],
+        rows=rows,
+        columns=columns,
     )
 
 
@@ -215,18 +227,22 @@ def csv_head(
     n: Annotated[int, Field(ge=1, le=50, description="返す行数")] = 5,
 ) -> CsvHead:
     """CSV の先頭 n 行（ヘッダーを除く）を返す。"""
-    _, rows = read_rows(resolve_csv(path))
-    return CsvHead(columns=rows[0], rows=rows[1 : n + 1])
+    # ヘッダーと n 行を読んだら、そこで読むのをやめる
+    _, rows = read_csv(resolve_csv(path), lambda rows: list(islice(rows, n + 1)))
+    if not rows:
+        raise ToolError("空のファイルです。")
+    return CsvHead(columns=rows[0], rows=rows[1:])
 
 
 if __name__ == "__main__":
     mcp.run()
 ```
 
-実装のポイントは次の 4 つです。
+実装のポイントは次の 5 つです。
 
 - **型ヒントが入力スキーマになる**: `Field(ge=1, le=50)` と書くだけで、`n=999` のような呼び出しは関数が動く前に拒否されます。自分で範囲を確認するコードは要りません
 - **戻り値の型が出力スキーマになる**: Pydantic のモデルを返すと、結果は 2 つの形で届きます。モデルが読む文字列（`content`）と、プログラムが読む JSON（`structuredContent`）です
+- **ファイル全体をメモリに載せない**: `csv_head` は `islice` でヘッダーと n 行だけを読んで止め、`csv_info` は行を数えるだけで保持しません。200 万行（約 48 MB）の CSV で試すと、`csv_head` は数ミリ秒、`csv_info` は 2 秒弱で返り、Python が確保したメモリの最大値は約 0.1 MB でした
 - **`mcp.run()` は引数なしで stdio になる**: ポートは開きません。`if __name__ == "__main__":` の下に置くのは、テストや `mcp run` コマンドがこのファイルを import するためです
 - **`print()` を書かない**: stdio では標準出力が通信路です。試したところ、`print()` の出力はプロセスの終了時に標準出力へ流れ、JSON-RPC の行に混ざりました。ログは `logging` で出します（標準エラー出力に出ます）
 
